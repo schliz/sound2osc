@@ -1,0 +1,55 @@
+<RCC>
+    <qresource prefix="/">
+        <!-- Main QML -->
+        <file alias="qml/main.qml">../qml/main.qml</file>
+
+        <!-- Views -->
+        <file alias="qml/SpectrumPlot.qml">../qml/views/SpectrumPlot.qml</file>
+        <file alias="qml/SpectrumWithControls.qml">../qml/views/SpectrumWithControls.qml</file>
+        <file alias="qml/WavePlot.qml">../qml/views/WavePlot.qml</file>
+        <file alias="qml/BandpassPreviewInSpectrum.qml">../qml/views/BandpassPreviewInSpectrum.qml</file>
+        <file alias="qml/BPMSettings.qml">../qml/views/BPMSettings.qml</file>
+        <file alias="qml/TriggerSettings.qml">../qml/views/TriggerSettings.qml</file>
+        <file alias="qml/TriggerSettingsArea.qml">../qml/views/TriggerSettingsArea.qml</file>
+        <file alias="qml/TriggerSettingsLegend.qml">../qml/views/TriggerSettingsLegend.qml</file>
+
+        <!-- Dialogs -->
+        <file alias="qml/AboutDialog.qml">../qml/dialogs/AboutDialog.qml</file>
+        <file alias="qml/SettingsDialog.qml">../qml/dialogs/SettingsDialog.qml</file>
+        <file alias="qml/PresetsDialog.qml">../qml/dialogs/PresetsDialog.qml</file>
+        <file alias="qml/PresetListDialog.qml">../qml/dialogs/PresetListDialog.qml</file>
+        <file alias="qml/OscMessageDialog.qml">../qml/dialogs/OscMessageDialog.qml</file>
+        <file alias="qml/OscLogDialog.qml">../qml/dialogs/OscLogDialog.qml</file>
+        <file alias="qml/BPMOscMessageDialog.qml">../qml/dialogs/BPMOscMessageDialog.qml</file>
+        <file alias="qml/NoInputDeviceDialog.qml">../qml/dialogs/NoInputDeviceDialog.qml</file>
+
+        <!-- Components -->
+        <file alias="qml/OscMessagesEosArea.qml">../qml/components/OscMessagesEosArea.qml</file>
+        <file alias="qml/OscMessagesCobaltArea.qml">../qml/components/OscMessagesCobaltArea.qml</file>
+        <file alias="qml/OscMessagesCobaltOldArea.qml">../qml/components/OscMessagesCobaltOldArea.qml</file>
+        <file alias="qml/OscMessagesColorSourceArea.qml">../qml/components/OscMessagesColorSourceArea.qml</file>
+        <file alias="qml/OscMessagesHog4Area.qml">../qml/components/OscMessagesHog4Area.qml</file>
+        <file alias="qml/BPMOscMessagesEosArea.qml">../qml/components/BPMOscMessagesEosArea.qml</file>
+        <file alias="qml/BPMOscMessagesCobaltArea.qml">../qml/components/BPMOscMessagesCobaltArea.qml</file>
+        <file alias="qml/BPMOscMessagesCobaltOldArea.qml">../qml/components/BPMOscMessagesCobaltOldArea.qml</file>
+        <file alias="qml/BPMOscMessagesOtherArea.qml">../qml/components/BPMOscMessagesOtherArea.qml</file>
+        <file alias="qml/NumericInput.qml">../qml/components/NumericInput.qml</file>
+        <file alias="qml/TouchArea.qml">../qml/components/TouchArea.qml</file>
+        <file alias="qml/oscUtils.js">../qml/components/oscUtils.js</file>
+
+        <!-- Style components -->
+        <file alias="qml/style/DarkBlueStripedBackground.qml">../qml/style/DarkBlueStripedBackground.qml</file>
+        <file alias="qml/style/DarkButton.qml">../qml/style/DarkButton.qml</file>
+        <file alias="qml/style/DarkCheckBox.qml">../qml/style/DarkCheckBox.qml</file>
+        <file alias="qml/style/DarkComboBox.qml">../qml/style/DarkComboBox.qml</file>
+        <file alias="qml/style/DarkRadioButton.qml">../qml/style/DarkRadioButton.qml</file>
+        <file alias="qml/style/DarkSpinBox.qml">../qml/style/DarkSpinBox.qml</file>
+        <file alias="qml/style/DarkSplitView.qml">../qml/style/DarkSplitView.qml</file>
+        <file alias="qml/style/DarkTabView.qml">../qml/style/DarkTabView.qml</file>
+        <file alias="qml/style/DarkTextField.qml">../qml/style/DarkTextField.qml</file>
+        <file alias="qml/style/GreyText.qml">../qml/style/GreyText.qml</file>
+        <file alias="qml/style/SliderWithIndicator.qml">../qml/style/SliderWithIndicator.qml</file>
+        <file alias="qml/style/CenterLabel.qml">../qml/style/CenterLabel.qml</file>
+        <file alias="qml/style/NumBlockButton.qml">../qml/style/NumBlockButton.qml</file>
+    </qresource>
+</RCC>

@@ -1,5 +1,18 @@
-# C++ objects and libs
+# Build directories
+build/
+cmake-build-*/
+out/
 
+# IDE files
+.idea/
+.vscode/
+*.user
+*.autosave
+.qmake.stash
+*.pro.user
+*.pro.user.*
+
+# C++ objects and libs
 *.slo
 *.lo
 *.o
@@ -7,31 +20,60 @@
 *.la
 *.lai
 *.so
+*.so.*
 *.dll
 *.dylib
+*.lib
+*.obj
 
-# Qt-es
-
-/.qmake.cache
-/.qmake.stash
-*.pro.user
-*.pro.user.*
-*.qbs.user
-*.qbs.user.*
-*.moc
+# Qt generated files
 moc_*.cpp
 qrc_*.cpp
 ui_*.h
-Makefile*
+*.moc
+Makefile
 *-build-*
 
-# QtCreator
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+CMakeUserPresets.json
+Testing/
 
-*.autosave
-build-*
+# Package files
+*.tar.gz
+*.zip
+*.deb
+*.rpm
+*.dmg
+*.AppImage
 
-#QtCtreator Qml
+# macOS
+.DS_Store
+*.app
+
+# Windows
+*.exe
+*.pdb
+
+# Editor backup files
+*~
+*.swp
+*.bak
+
+# Qt Creator
 *.qmlproject.user
 *.qmlproject.user.*
 
-.DS_Store
+# Testing
+*.gcno
+*.gcda
+*.gcov
+
+# Ninja
+.ninja_deps
+.ninja_log
