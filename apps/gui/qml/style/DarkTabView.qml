@@ -18,38 +18,54 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
+import QtQuick
+import QtQuick.Controls
 
-// ------------- Dark styled TabView -----------------
-TabView {
-	style: TabViewStyle {
-		frameOverlap: 1
-		tab: Rectangle {
-			color: styleData.selected ? "#1C2C40" :"#333333"
-			border.color:  "#B5B7BA"
-			implicitWidth: Math.max(text.width + 10, 80)
-			implicitHeight: 30
-			radius: 2
-			Text {
-				id: text
-				anchors.centerIn: parent
-				text: styleData.title
-				color: "#B5B7BA"
-				font.pointSize: 10
-			}
-		}
-		frame: Rectangle {
-			color: "transparent"
-			border.width: 1
-			border.color: "#B5B7BA"
-		}
-	}
 
-	// returns the currently displayed item
-	function getCurrentTabContent() {
-		var tab = contentItem.children[currentIndex]
-		return tab.item
-	}
+// ------------- Dark styled TabBar (Qt6) -----------------
+// Note: Qt6 removed TabView. Use TabBar + StackLayout instead.
+// This component provides a styled TabBar; combine with StackLayout for content.
+TabBar {
+    id: control
+
+    background: Rectangle {
+        color: "transparent"
+    }
+
+    contentItem: ListView {
+        model: control.contentModel
+        currentIndex: control.currentIndex
+        spacing: 2
+        orientation: ListView.Horizontal
+        boundsBehavior: Flickable.StopAtBounds
+        flickableDirection: Flickable.AutoFlickIfNeeded
+        snapMode: ListView.SnapToItem
+
+        highlightMoveDuration: 0
+        highlightRangeMode: ListView.ApplyRange
+        preferredHighlightBegin: 40
+        preferredHighlightEnd: width - 40
+    }
+
+    // Custom delegate for TabButton styling
+    delegate: TabButton {
+        id: tabButton
+        width: Math.max(implicitWidth, 80)
+        height: 30
+
+        contentItem: Text {
+            text: tabButton.text
+            font.pointSize: 10
+            color: "#B5B7BA"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+
+        background: Rectangle {
+            color: tabButton.checked ? "#1C2C40" : "#333333"
+            border.color: "#B5B7BA"
+            border.width: 1
+            radius: 2
+        }
+    }
 }

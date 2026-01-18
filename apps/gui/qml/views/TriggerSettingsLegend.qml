@@ -18,9 +18,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
+import QtQuick
+import QtQuick.Controls
+
 
 import "style"  // import all files in style dir
 
@@ -60,7 +60,7 @@ Column {
 		text: "OSC Output"
 		Connections {
 			target: controller
-			onSettingsChanged: sendOscCheckbox.checked = controller.getOscEnabled()
+			function onSettingsChanged() { sendOscCheckbox.checked = controller.getOscEnabled() }
 		}
 	}
 	DarkCheckBox {
@@ -73,7 +73,7 @@ Column {
 		text: "OSC Input"
 		Connections {
 			target: controller
-			onSettingsChanged: oscInputCheckbox.checked = controller.getOscInputEnabled()
+			function onSettingsChanged() { oscInputCheckbox.checked = controller.getOscInputEnabled() }
 		}
     }
 

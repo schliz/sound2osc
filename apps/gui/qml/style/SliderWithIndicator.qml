@@ -18,40 +18,60 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
+import QtQuick
+import QtQuick.Controls
 
-// ------------- Dark styled Slider with optional level indiactor -----------------
+
+// ------------- Dark styled Slider with optional level indicator (Qt6) -----------------
 Slider {
-	property real indicator: 0.0
-	property bool showIndicator: true
-	property color handleActiveColor: "#B5B7BA"
-	orientation: Qt.Vertical
-	minimumValue: 0.0
-	maximumValue: 1.0
-	style: SliderStyle {
-		groove: Rectangle {
-			implicitWidth: 200
-			implicitHeight: 8
-			color: "#333333"
-			radius: 8
-			Rectangle {
-				implicitWidth: showIndicator ? parent.width * indicator : styleData.handlePosition
-				implicitHeight: 8
-				color: control.enabled ? "#B5B7BA" : "#777"
-				radius: 8
-			}
-		}
-		handle: Rectangle {
-			anchors.centerIn: parent
-			color: (!showIndicator || indicator >= control.value) ? handleActiveColor : "#555"
-			border.color: "gray"
-			border.width: 2
-			implicitWidth: 18
-			implicitHeight: 18
-			radius: 9
-			visible: control.enabled
-		}
-	}
+    id: control
+    property real indicator: 0.0
+    property bool showIndicator: true
+    property color handleActiveColor: "#B5B7BA"
+    // Qt5 compatibility aliases
+    property alias minimumValue: control.from
+    property alias maximumValue: control.to
+    orientation: Qt.Vertical
+    from: 0.0
+    to: 1.0
+
+    background: Rectangle {
+        x: control.leftPadding + (control.horizontal ? 0 : (control.availableWidth - width) / 2)
+        y: control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : 0)
+        implicitWidth: control.horizontal ? 200 : 8
+        implicitHeight: control.horizontal ? 8 : 200
+        width: control.horizontal ? control.availableWidth : implicitWidth
+        height: control.horizontal ? implicitHeight : control.availableHeight
+        color: "#333333"
+        radius: 8
+
+        // Indicator/value fill
+        Rectangle {
+            width: control.horizontal
+                   ? (showIndicator ? parent.width * indicator : control.visualPosition * parent.width)
+                   : parent.width
+            height: control.horizontal
+                    ? parent.height
+                    : (showIndicator ? parent.height * indicator : (1.0 - control.visualPosition) * parent.height)
+            y: control.horizontal ? 0 : parent.height - height
+            color: control.enabled ? "#B5B7BA" : "#777"
+            radius: 8
+        }
+    }
+
+    handle: Rectangle {
+        x: control.leftPadding + (control.horizontal
+           ? control.visualPosition * (control.availableWidth - width)
+           : (control.availableWidth - width) / 2)
+        y: control.topPadding + (control.horizontal
+           ? (control.availableHeight - height) / 2
+           : control.visualPosition * (control.availableHeight - height))
+        implicitWidth: 18
+        implicitHeight: 18
+        radius: 9
+        color: (!showIndicator || indicator >= control.value) ? handleActiveColor : "#555"
+        border.color: "gray"
+        border.width: 2
+        visible: control.enabled
+    }
 }

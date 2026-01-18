@@ -43,6 +43,7 @@ CTestTestfile.cmake
 _deps/
 CMakeUserPresets.json
 Testing/
+.cache/
 
 # Package files
 *.tar.gz

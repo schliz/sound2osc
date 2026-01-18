@@ -18,35 +18,36 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
+import QtQuick
+import QtQuick.Controls
 
-// ------------- Dark styled Button -----------------
+
+// ------------- Dark styled Button (Qt6) -----------------
 Button {
-	property bool highlighted: false
+	id: control
+	property bool isHighlighted: false
 	property color highlightColor: "lightgreen"
-    property int fontPointSize: 10
-    property color fontColor: "#b5b7ba"
-	style: ButtonStyle {
-		background: Rectangle {
-			anchors.fill: parent
-			anchors.margins: 2
-			radius: 12
-			border.width: 2
-			border.color: highlighted ? highlightColor : "#888"
-			gradient: Gradient {
-				GradientStop { position: 0 ; color: control.pressed ? "#444" : "#333" }
-				GradientStop { position: 1 ; color: control.pressed ? "#555" : "#444" }
-			}
+	property int fontPointSize: 10
+	property color fontColor: "#b5b7ba"
+
+	background: Rectangle {
+		implicitWidth: 80
+		implicitHeight: 30
+		radius: 12
+		border.width: 2
+		border.color: control.isHighlighted ? control.highlightColor : "#888"
+		gradient: Gradient {
+			GradientStop { position: 0 ; color: control.pressed ? "#444" : "#333" }
+			GradientStop { position: 1 ; color: control.pressed ? "#555" : "#444" }
 		}
-		label: GreyText {
-			text: control.text
-            color: fontColor
-            font.pointSize: fontPointSize
-			horizontalAlignment: Text.AlignHCenter
-			verticalAlignment: Text.AlignVCenter
-			elide: Text.ElideRight
-		}
+	}
+
+	contentItem: Text {
+		text: control.text
+		color: control.fontColor
+		font.pointSize: control.fontPointSize
+		horizontalAlignment: Text.AlignHCenter
+		verticalAlignment: Text.AlignVCenter
+		elide: Text.ElideRight
 	}
 }

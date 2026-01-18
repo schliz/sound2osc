@@ -18,24 +18,68 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
+import QtQuick
+import QtQuick.Controls
 
-// ------------- Dark styled SpinBox -----------------
+
+// ------------- Dark styled SpinBox (Qt6) -----------------
 SpinBox {
-	font.pointSize: 10
-	style: SpinBoxStyle {
-		background: Rectangle {
-			color: "#333333"
-		}
-		textColor: "#B5B7BA"
+    id: control
+    font.pointSize: 10
 
-	}
-	Rectangle {
-		anchors.fill: parent
-		color: "transparent"
-		border.width: 1
-		border.color: "#444"
-	}
+    contentItem: TextInput {
+        z: 2
+        text: control.textFromValue(control.value, control.locale)
+        font: control.font
+        color: "#B5B7BA"
+        selectionColor: "#1C2C40"
+        selectedTextColor: "#B5B7BA"
+        horizontalAlignment: Qt.AlignHCenter
+        verticalAlignment: Qt.AlignVCenter
+        readOnly: !control.editable
+        validator: control.validator
+        inputMethodHints: Qt.ImhFormattedNumbersOnly
+    }
+
+    up.indicator: Rectangle {
+        x: control.mirrored ? 0 : parent.width - width
+        height: parent.height
+        implicitWidth: 30
+        implicitHeight: 30
+        color: control.up.pressed ? "#1C2C40" : "#333333"
+        border.color: "#444"
+        border.width: 1
+
+        Text {
+            text: "+"
+            font.pixelSize: control.font.pixelSize * 1.5
+            color: control.up.pressed ? "#fff" : "#B5B7BA"
+            anchors.centerIn: parent
+        }
+    }
+
+    down.indicator: Rectangle {
+        x: control.mirrored ? parent.width - width : 0
+        height: parent.height
+        implicitWidth: 30
+        implicitHeight: 30
+        color: control.down.pressed ? "#1C2C40" : "#333333"
+        border.color: "#444"
+        border.width: 1
+
+        Text {
+            text: "-"
+            font.pixelSize: control.font.pixelSize * 1.5
+            color: control.down.pressed ? "#fff" : "#B5B7BA"
+            anchors.centerIn: parent
+        }
+    }
+
+    background: Rectangle {
+        implicitWidth: 100
+        implicitHeight: 30
+        color: "#333333"
+        border.color: "#444"
+        border.width: 1
+    }
 }

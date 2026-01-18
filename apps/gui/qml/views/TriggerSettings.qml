@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
+import QtQuick
+import QtQuick.Controls
 
 import "style"  // import all files in style dir
 
@@ -185,7 +185,7 @@ Item {
             width: parent.width
             height: 30
             text: ""
-            highlighted: true
+            isHighlighted: true
             highlightColor: triggerController.getMute() ? "#FF6633" : "lightgreen"
             Image {
                 id: playimage
@@ -207,7 +207,7 @@ Item {
             }
             Connections {
                 target: triggerController
-                onMuteChanged: {
+                function onMuteChanged() {
                     muteButton.highlightColor = triggerController.getMute() ? "#FF6633" : "lightgreen"
                     playimage.visible = triggerController.getMute()
                     pauseimage.visible = !triggerController.getMute()

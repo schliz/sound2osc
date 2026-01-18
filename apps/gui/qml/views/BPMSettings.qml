@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
+import QtQuick
+import QtQuick.Controls
 
 import "style"  // import all files in style dir
 
@@ -119,7 +119,7 @@ Item {
 
                 Connections {
                     target: controller
-                    onAutoBpmChanged: bpmActiveCheckbox.checked = controller.autoBpm
+                    function onAutoBpmChanged() { bpmActiveCheckbox.checked = controller.autoBpm }
                 }
             }
 
@@ -210,7 +210,7 @@ Item {
 
                 Connections {
                     target: controller
-                    onBpmRangeChanged: rangeComboBox.updateFromController()
+                    function onBpmRangeChanged() { rangeComboBox.updateFromController() }
                 }
 
                 function updateFromController() {
@@ -265,7 +265,7 @@ Item {
             width: parent.width - 2*x
             height: 30
             text: ""
-            highlighted: true
+            isHighlighted: true
             highlightColor: controller.getBPMMute() ? "#FF6633" : "lightgreen"
             Image {
                 id: playimage
@@ -287,7 +287,7 @@ Item {
             }
             Connections {
                 target: controller
-                onBpmMuteChanged: {
+                function onBpmMuteChanged() {
                     muteButton.highlightColor = controller.getBPMMute() ? "#FF6633" : "lightgreen"
                     playimage.visible = controller.getBPMMute()
                     pauseimage.visible = !controller.getBPMMute()

@@ -18,10 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
-import QtQuick.Dialogs 1.2
+import QtQuick
+import QtQuick.Controls
+
+import QtQuick.Dialogs
 
 import "style"  // import all files in style dir
 
@@ -116,7 +116,7 @@ Dialog {
 			// ----------------------- OSC Ports ----------------------
 			Connections {
 				target: controller
-				onUseTcpChanged: {
+				function onUseTcpChanged() {
 					udpTxPort.visible = !controller.getUseTcp()
 					udpRxPort.visible = !controller.getUseTcp()
 					tcpPort.visible = controller.getUseTcp()
@@ -223,14 +223,14 @@ Dialog {
 				horizontalAlignment: Text.AlignLeft
 				verticalAlignment: Text.AlignVCenter
 			}
-			ExclusiveGroup { id: inputListGroup }
+			ButtonGroup { id: inputListGroup }
 			ScrollView {
 				width: parent.width
 				height: parent.height - 40*2 - 30*5 - 20 - (udpTxPort.visible ? 30 : 0)
 				ListView {
 					id: inputList
 					model: controller.getAvailableInputs()
-					delegate: RadioButton {
+					delegate: DarkRadioButton {
 						height: 30
 						width: inputList.width
 						text: modelData
@@ -238,16 +238,11 @@ Dialog {
 							checked = (modelData === controller.getActiveInputName())
 						}
 
-						exclusiveGroup: inputListGroup
+						ButtonGroup.group: inputListGroup
 						onClicked: {
 							checked = true
 							if (modelData && modelData !== controller.getActiveInputName()) {
 								controller.setInputByName(modelData)
-							}
-						}
-						style: RadioButtonStyle {
-							label: GreyText {
-								text: control.text
 							}
 						}
 					}
@@ -261,7 +256,7 @@ Dialog {
                 height: 30
                 text: "About"
                 highlightColor: "#555"
-                highlighted: true
+                isHighlighted: true
                 onClicked: controller.openDialog("qrc:/qml/AboutDialog.qml")
             }
 

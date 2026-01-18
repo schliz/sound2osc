@@ -18,24 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
+import QtQuick
+import QtQuick.Controls
 
-// ------------- Dark styled TextField -----------------
+
+// ------------- Dark styled TextField (Qt6) -----------------
 TextField {
-	font.pointSize: 10
-	style: TextFieldStyle {
-		background: Rectangle {
-			color: "#333333"
-		}
-		textColor: control.enabled ? "#B5B7BA" : "#555"
+    id: control
+    font.pointSize: 10
+    color: control.enabled ? "#B5B7BA" : "#555"
+    selectionColor: "#1C2C40"
+    selectedTextColor: "#B5B7BA"
+    placeholderTextColor: "#777"
 
-	}
-	Rectangle {
-		anchors.fill: parent
-		color: "transparent"
-		border.width: 1
-		border.color: "#444"
-	}
+    background: Rectangle {
+        implicitWidth: 200
+        implicitHeight: 30
+        color: "#333333"
+        border.color: "#444"
+        border.width: 1
+    }
 }

@@ -18,15 +18,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
+import QtQuick
+import QtQuick.Controls
 
-// ------------- Dark styled RadioButton -----------------
+
+// ------------- Dark styled RadioButton (Qt6) -----------------
 RadioButton {
-	style: RadioButtonStyle {
-		label: GreyText {
-			text: control.text
+	id: control
+
+	indicator: Rectangle {
+		implicitWidth: 16
+		implicitHeight: 16
+		x: control.leftPadding
+		y: parent.height / 2 - height / 2
+		radius: 8
+		border.color: control.activeFocus ? "darkblue" : (control.enabled ? "gray" : "#555")
+		border.width: 1
+		gradient: Gradient {
+			GradientStop { position: 0 ; color: control.pressed ? "#444" : "#333" }
+			GradientStop { position: 1 ; color: control.pressed ? "#555" : "#444" }
 		}
+		Rectangle {
+			visible: control.checked
+			width: 8
+			height: 8
+			x: 4
+			y: 4
+			radius: 4
+			color: "lightgreen"
+		}
+	}
+
+	contentItem: Text {
+		text: control.text
+		font.pointSize: 10
+		color: "#b5b7ba"
+		verticalAlignment: Text.AlignVCenter
+		leftPadding: control.indicator.width + control.spacing
 	}
 }

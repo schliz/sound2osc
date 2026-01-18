@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
+import QtQuick
 
 // ------------------ Visual preview of a BandpassTrigger ------------------
 Item {
@@ -48,7 +48,7 @@ Item {
 	Connections {
 		// update bandpass area when a parameter changes:
 		target: bandpassController
-		onParameterChanged: area.update()
+		function onParameterChanged() { area.update() }
 	}
 
 	onWidthChanged: area.update()

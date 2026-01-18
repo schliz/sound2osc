@@ -18,10 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
-import QtQuick.Dialogs 1.2
+import QtQuick
+import QtQuick.Controls
+
+import QtQuick.Dialogs
 import Qt.labs.folderlistmodel 2.1
 
 import "style"  // import all files in style dir
@@ -98,8 +98,8 @@ Dialog {
 								}
 								Connections {
 									target: controller
-									onPresetChanged: button.updateHighlighted()
-									onPresetChangedButNotSavedChanged: button.updateHighlighted()
+									function onPresetChanged() { button.updateHighlighted() }
+									function onPresetChangedButNotSavedChanged() { button.updateHighlighted() }
 								}
 							}
 

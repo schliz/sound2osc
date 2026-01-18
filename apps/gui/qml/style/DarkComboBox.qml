@@ -18,31 +18,76 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
+import QtQuick
+import QtQuick.Controls
 
-// ------------- Dark styled ComboBox -----------------
+
+// ------------- Dark styled ComboBox (Qt6) -----------------
 ComboBox {
-	style: ComboBoxStyle {
-		background: Rectangle {
-			anchors.fill: parent
-			border.width: 2
-			border.color: "#888"
-			gradient: Gradient {
-				GradientStop { position: 0 ; color: control.pressed ? "#444" : "#333" }
-				GradientStop { position: 1 ; color: control.pressed ? "#555" : "#444" }
-			}
-			Text {
-				text: "▼"
-                color:  enabled ? "#B5B7BA" : "#666666"
-				anchors.right: parent.right
-				anchors.verticalCenter: parent.verticalCenter
-				anchors.rightMargin: 5
-				font.pointSize: 10
-			}
+	id: control
+
+	background: Rectangle {
+		implicitWidth: 120
+		implicitHeight: 30
+		border.width: 2
+		border.color: "#888"
+		gradient: Gradient {
+			GradientStop { position: 0 ; color: control.pressed ? "#444" : "#333" }
+			GradientStop { position: 1 ; color: control.pressed ? "#555" : "#444" }
 		}
-        textColor: enabled ? "#888" : "#666"
+	}
+
+	indicator: Text {
+		text: "▼"
+		color: control.enabled ? "#B5B7BA" : "#666666"
+		anchors.right: parent.right
+		anchors.verticalCenter: parent.verticalCenter
+		anchors.rightMargin: 5
 		font.pointSize: 10
+	}
+
+	contentItem: Text {
+		leftPadding: 5
+		rightPadding: control.indicator.width + control.spacing
+		text: control.displayText
+		font.pointSize: 10
+		color: control.enabled ? "#888" : "#666"
+		verticalAlignment: Text.AlignVCenter
+		elide: Text.ElideRight
+	}
+
+	popup: Popup {
+		y: control.height
+		width: control.width
+		implicitHeight: contentItem.implicitHeight
+		padding: 1
+
+		contentItem: ListView {
+			clip: true
+			implicitHeight: contentHeight
+			model: control.popup.visible ? control.delegateModel : null
+			currentIndex: control.highlightedIndex
+			ScrollIndicator.vertical: ScrollIndicator { }
+		}
+
+		background: Rectangle {
+			border.color: "#888"
+			color: "#333"
+		}
+	}
+
+	delegate: ItemDelegate {
+		width: control.width
+		contentItem: Text {
+			text: modelData
+			color: "#b5b7ba"
+			font.pointSize: 10
+			elide: Text.ElideRight
+			verticalAlignment: Text.AlignVCenter
+		}
+		background: Rectangle {
+			color: highlighted ? "#555" : "#333"
+		}
+		highlighted: control.highlightedIndex === index
 	}
 }

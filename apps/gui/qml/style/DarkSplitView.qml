@@ -18,14 +18,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
+import QtQuick
+import QtQuick.Controls
 
 // ------------- Dark styled SplitView -----------------
 SplitView {
-	handleDelegate: Rectangle {
+	handle: Rectangle {
+		implicitWidth: 20
+		implicitHeight: 20
 		color: "#444"
-		height: 20
 		Item {
 			height: 5
 			width: 60

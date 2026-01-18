@@ -18,10 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
-import QtQuick.Dialogs 1.2
+import QtQuick
+import QtQuick.Controls
+
+import QtQuick.Dialogs
 
 import "style"  // import all files in style dir
 
@@ -63,8 +63,8 @@ Dialog {
 				}
 				Connections {
 					target: controller
-					onPresetNameChanged: statusText.updateText()
-					onPresetChangedButNotSavedChanged: statusText.updateText()
+					function onPresetNameChanged() { statusText.updateText() }
+					function onPresetChangedButNotSavedChanged() { statusText.updateText() }
 				}
 			}
 

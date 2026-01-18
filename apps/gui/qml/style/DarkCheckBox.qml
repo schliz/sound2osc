@@ -18,39 +18,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Controls 1.4
-import QtQuick.Controls.Styles 1.4
+import QtQuick
+import QtQuick.Controls
 
-// ------------- Dark styled CheckBox -----------------
+
+// ------------- Dark styled CheckBox (Qt6) -----------------
 CheckBox {
+	id: control
 	property int fontSize: 10
 	property color textColor: "#b5b7ba"
-    property color disabledTextColor: "#666"
-	style: CheckBoxStyle {
-		indicator: Rectangle {
-			implicitWidth: 16
-			implicitHeight: 16
-			radius: 3
-            border.color: control.activeFocus ? "darkblue" : (enabled ? "gray" : "#555")
-			border.width: 1
-			gradient: Gradient {
-				GradientStop { position: 0 ; color: control.pressed ? "#444" : "#333" }
-				GradientStop { position: 1 ; color: control.pressed ? "#555" : "#444" }
-			}
-			Rectangle {
-				visible: control.checked
-				color: "lightgreen"
-                border.color: "#FFF"
-				radius: 1
-				anchors.margins: 3
-				anchors.fill: parent
-			}
+	property color disabledTextColor: "#666"
+
+	indicator: Rectangle {
+		implicitWidth: 16
+		implicitHeight: 16
+		x: control.leftPadding
+		y: parent.height / 2 - height / 2
+		radius: 3
+		border.color: control.activeFocus ? "darkblue" : (control.enabled ? "gray" : "#555")
+		border.width: 1
+		gradient: Gradient {
+			GradientStop { position: 0 ; color: control.pressed ? "#444" : "#333" }
+			GradientStop { position: 1 ; color: control.pressed ? "#555" : "#444" }
 		}
-		label: GreyText {
-			text: control.text
-			font.pointSize: fontSize
-            color: enabled ? textColor : disabledTextColor
+		Rectangle {
+			visible: control.checked
+			color: "lightgreen"
+			border.color: "#FFF"
+			radius: 1
+			anchors.margins: 3
+			anchors.fill: parent
 		}
+	}
+
+	contentItem: Text {
+		text: control.text
+		font.pointSize: control.fontSize
+		color: control.enabled ? control.textColor : control.disabledTextColor
+		verticalAlignment: Text.AlignVCenter
+		leftPadding: control.indicator.width + control.spacing
 	}
 }

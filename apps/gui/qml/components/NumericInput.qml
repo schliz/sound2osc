@@ -18,8 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import QtQuick 2.5
-import QtQuick.Window 2.2
+import QtQuick
+import QtQuick.Window
 
 import "style"  // Used to import styled NumBlockButton
 

@@ -50,7 +50,7 @@ OSCNetworkManager::OSCNetworkManager()
 
 	// connect TCP socket with onConnected and onError slots:
 	connect(&m_tcpSocket, SIGNAL(connected()), this, SLOT(onConnected()));
-	connect(&m_tcpSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(onError()));
+	connect(&m_tcpSocket, &QAbstractSocket::errorOccurred, this, &OSCNetworkManager::onError);
 	connect(&m_udpSocket, SIGNAL(readyRead()), this, SLOT(readIncomingUdpDatagrams()));
 	connect(&m_tcpSocket, SIGNAL(readyRead()), this, SLOT(readIncomingTcpStream()));
 
