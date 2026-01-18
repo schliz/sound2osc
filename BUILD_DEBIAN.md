@@ -27,7 +27,6 @@ sudo apt install -y \
     qt6-declarative-dev \
     libqt6quick6 \
     libqt6quickcontrols2-6 \
-    qt6-quickcontrols2-dev \
     libgl1-mesa-dev \
     qml6-module-qtquick \
     qml6-module-qtquick-layouts \

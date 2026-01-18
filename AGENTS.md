@@ -14,12 +14,6 @@ When you need the user to perform a manual action (install packages, run command
 
 Example: If you need `sudo apt install some-package`, ask via the question tool and the user will confirm completion or report errors.
 
-## Current Phase
-
-**Phase 1: Repository Cleanup & Build System**
-
-We are migrating from Qt5/qmake to Qt6/CMake with a restructured codebase.
-
 ## Key Context
 
 - **Build System:** Migrating from qmake to CMake
@@ -57,3 +51,7 @@ cmake --build build
 # Run
 ./build/apps/gui/sound2osc
 ```
+
+## Version Control
+
+We use the [conventional commits](https://raw.githubusercontent.com/conventional-commits/conventionalcommits.org/refs/heads/master/content/v1.0.0/index.md) naming convention. Commit (but not push!) your work regularly to maintain a clean, oneline git history.
