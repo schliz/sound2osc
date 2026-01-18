@@ -116,30 +116,28 @@ Dialog {
 					id: unsavedChangesDialog
 					title: "Unsaved Changes"
 					text: "Discard unsaved changes?"
-					standardButtons: StandardButton.Cancel | StandardButton.Discard | StandardButton.Save
+					buttons: MessageDialog.Cancel | MessageDialog.Discard | MessageDialog.Save
 					modality: Qt.ApplicationModal
-					onAccepted: {
-						// Save Button:
-						controller.saveCurrentPreset()
-						//controller.openDialog("qrc:/qml/LoadPresetDialog.qml")
-						controller.openLoadPresetDialog()
-						unsavedChangesDialog.close()
-                        root.close()
-                        controller.dialogIsClosed(root)
-					}
-					onDiscard: {
-						// Discard Button:
-						//controller.openDialog("qrc:/qml/LoadPresetDialog.qml")
-						controller.openLoadPresetDialog()
-						unsavedChangesDialog.close()
-                        root.close()
-                        controller.dialogIsClosed(root)
-					}
-					onRejected: {
-						// Cancel Button:
-						unsavedChangesDialog.close()
-                        root.close()
-                        controller.dialogIsClosed(root)
+					onButtonClicked: function(button, role) {
+						if (button === MessageDialog.Save) {
+							// Save Button:
+							controller.saveCurrentPreset()
+							controller.openLoadPresetDialog()
+							unsavedChangesDialog.close()
+                            root.close()
+                            controller.dialogIsClosed(root)
+						} else if (button === MessageDialog.Discard) {
+							// Discard Button:
+							controller.openLoadPresetDialog()
+							unsavedChangesDialog.close()
+                            root.close()
+                            controller.dialogIsClosed(root)
+						} else {
+							// Cancel Button:
+							unsavedChangesDialog.close()
+                            root.close()
+                            controller.dialogIsClosed(root)
+						}
 					}
 				}
 
@@ -158,18 +156,19 @@ Dialog {
 					id: resetDialog
 					title: "Reset to Factory Settings"
 					text: "Reset to Factory Settings?"
-					standardButtons: StandardButton.Cancel | StandardButton.Yes
+					buttons: MessageDialog.Cancel | MessageDialog.Yes
 					modality: Qt.ApplicationModal
-					onYes: {
-						controller.resetPreset()
-						resetDialog.close()
-                        root.close()
-                        controller.dialogIsClosed(root)
-					}
-					onRejected: {
-						resetDialog.close()
-                        root.close()
-                        controller.dialogIsClosed(root)
+					onButtonClicked: function(button, role) {
+						if (button === MessageDialog.Yes) {
+							controller.resetPreset()
+							resetDialog.close()
+                            root.close()
+                            controller.dialogIsClosed(root)
+						} else {
+							resetDialog.close()
+                            root.close()
+                            controller.dialogIsClosed(root)
+						}
 					}
 				}
 

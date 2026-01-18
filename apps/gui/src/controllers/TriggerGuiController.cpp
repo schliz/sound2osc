@@ -28,10 +28,10 @@ TriggerGuiController::TriggerGuiController(TriggerGenerator *trigger, QObject *p
     , m_trigger(trigger)
 {
     // connect on and off signals of TriggerFilter with the signals of this controller:
-    connect(&(trigger->getTriggerFilter()), SIGNAL(onSignalSent()), this, SIGNAL(triggerOn()));
-	connect(&(trigger->getTriggerFilter()), SIGNAL(offSignalSent()), this, SIGNAL(triggerOff()));
-	connect(&(trigger->getTriggerFilter()), SIGNAL(onSignalSent()), this, SIGNAL(activeChanged()));
-	connect(&(trigger->getTriggerFilter()), SIGNAL(offSignalSent()), this, SIGNAL(activeChanged()));
+    connect(&(trigger->getTriggerFilter()), &TriggerFilter::onSignalSent, this, &TriggerGuiController::triggerOn);
+	connect(&(trigger->getTriggerFilter()), &TriggerFilter::offSignalSent, this, &TriggerGuiController::triggerOff);
+	connect(&(trigger->getTriggerFilter()), &TriggerFilter::onSignalSent, this, &TriggerGuiController::activeChanged);
+	connect(&(trigger->getTriggerFilter()), &TriggerFilter::offSignalSent, this, &TriggerGuiController::activeChanged);
 }
 
 void TriggerGuiController::resetParameters()

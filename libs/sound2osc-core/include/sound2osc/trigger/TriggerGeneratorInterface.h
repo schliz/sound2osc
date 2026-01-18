@@ -38,7 +38,7 @@ class TriggerGeneratorInterface
 public:
     explicit TriggerGeneratorInterface(bool isBandpass)
         : m_isBandpass(isBandpass) {}
-	virtual ~TriggerGeneratorInterface() {}
+	virtual ~TriggerGeneratorInterface() = default;
 
 	// checks if a signal should be triggered by analyzing the given spectrum
     // forceRelease is true when low solo mode is active and a lower trigger was activated

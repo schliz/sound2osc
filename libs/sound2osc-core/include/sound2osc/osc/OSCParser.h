@@ -64,6 +64,7 @@
 class OSCParserClient
 {
 public:
+	virtual ~OSCParserClient() = default;
 	virtual void OSCParserClient_Log(const std::string &message) = 0;
 	virtual void OSCParserClient_Send(const char *buf, size_t size) = 0;
 };
@@ -196,7 +197,7 @@ protected:
 class OSCPacketElement
 {
 public:
-	virtual ~OSCPacketElement() {}
+	virtual ~OSCPacketElement() = default;
 	virtual size_t ComputeSize() const = 0;
 	virtual bool Write(char *buf, size_t size) const = 0;
 };
@@ -209,10 +210,10 @@ class OSCPacketWriter
 public:
 	OSCPacketWriter();
 	OSCPacketWriter(const std::string &path);
-	virtual ~OSCPacketWriter();
+	~OSCPacketWriter() override;
 
-	virtual size_t ComputeSize() const;
-	virtual bool Write(char *buf, size_t size) const;
+	size_t ComputeSize() const override;
+	bool Write(char *buf, size_t size) const override;
 	virtual char* Create(size_t &size) const;
 	virtual const std::string& GetPath() const {return m_Path;}
 	virtual void SetPath(const std::string &path) {m_Path = path;}
@@ -295,10 +296,10 @@ class OSCBundleWriter
 {
 public:
 	OSCBundleWriter();
-	virtual ~OSCBundleWriter();
+	~OSCBundleWriter() override;
 
-	virtual size_t ComputeSize() const;
-	virtual bool Write(char *buf, size_t size) const;
+	size_t ComputeSize() const override;
+	bool Write(char *buf, size_t size) const override;
 	virtual char* Create(size_t &size) const;
 	virtual void AddPacket(OSCPacketElement *packet);
 

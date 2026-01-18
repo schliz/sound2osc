@@ -34,24 +34,24 @@
 static const int AGC_AVERAGING_LENGTH = 44*2;  // samples
 
 // headroom to leave when using AGC [0...1]
-static const float AGC_HEADROOM = 0.1;  // 10%
+static constexpr float AGC_HEADROOM = 0.1f;  // 10%
 
 // min value for AGC to be active == max value of noise [0...1]
-static const float AGC_NOISE_THRESHOLD = 0.1; // 10%
+static constexpr float AGC_NOISE_THRESHOLD = 0.1f; // 10%
 
 // amount to increase the gain per frame when gain is too low
 // i.e. 1 / <frames needed to increase the gain from 0 to 1>
-static const float AGC_INCREMENT_STEPSIZE = 1.0 / (3*44);  // 3s * 44fps
+static constexpr float AGC_INCREMENT_STEPSIZE = 1.0f / (3*44);  // 3s * 44fps
 
 // amount to decrease the gain per frame when gain is too high
 // i.e. 1 / <frames needed to decrease the gain from 1 to 0>
-static const float AGC_DECREMENT_STEPSIZE = 1.0 / (1*44);  // 1s * 44fps
+static constexpr float AGC_DECREMENT_STEPSIZE = 1.0f / (1*44);  // 1s * 44fps
 
 // minimum gain of AGC
-static const float AGC_MIN_GAIN = 0.5;
+static constexpr float AGC_MIN_GAIN = 0.5f;
 
 // maximum gain of AGC
-static const float AGC_MAX_GAIN = 5.0;
+static constexpr float AGC_MAX_GAIN = 5.0f;
 
 
 // This class represents a spectrum that is scaled

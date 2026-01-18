@@ -119,35 +119,35 @@ bool OSCMessage::pathStartsWith(QString value) const
 bool OSCMessage::isTrue()
 {
 	if (m_arguments.isEmpty()) return true;
-	if (m_arguments.first().type() == QVariant::Double && m_arguments.first().toDouble() > 0.99) return true;
-	if (m_arguments.first().type() == QVariant::Int && m_arguments.first().toInt() == 1) return true;
-	if (m_arguments.first().type() == QVariant::Bool && m_arguments.first().toBool()) return true;
+	if (m_arguments.first().typeId() == QMetaType::Double && m_arguments.first().toDouble() > 0.99) return true;
+	if (m_arguments.first().typeId() == QMetaType::Int && m_arguments.first().toInt() == 1) return true;
+	if (m_arguments.first().typeId() == QMetaType::Bool && m_arguments.first().toBool()) return true;
 	return false;
 }
 
 qreal OSCMessage::value()
 {
 	if (m_arguments.isEmpty()) return 0.0;
-	if (m_arguments.first().type() == QVariant::Double) return m_arguments.first().toDouble();
-	if (m_arguments.first().type() == QVariant::Int) return qreal(m_arguments.first().toInt());
+	if (m_arguments.first().typeId() == QMetaType::Double) return m_arguments.first().toDouble();
+	if (m_arguments.first().typeId() == QMetaType::Int) return static_cast<qreal>(m_arguments.first().toInt());
 	return 0.0;
 }
 
 QString OSCMessage::getArgumentsAsDebugString()
 {
-	QString result = "";
+	QString result;
 	for (int i=0; i<m_arguments.size(); ++i) {
 		const QVariant& arg = m_arguments[i];
-		if (arg.type() == QVariant::Int) {
+		if (arg.typeId() == QMetaType::Int) {
 			result += ", Int: " + QString::number(arg.toInt());
-		} else if (arg.type() == QVariant::Double) {
+		} else if (arg.typeId() == QMetaType::Double) {
 			result += ", Double: " + QString::number(arg.toDouble());
-		} else if (arg.type() == QVariant::String) {
+		} else if (arg.typeId() == QMetaType::QString) {
 			result += ", String: " + arg.toString();
-		} else if (arg.type() == QVariant::Bool) {
+		} else if (arg.typeId() == QMetaType::Bool) {
 			result += ", Bool: " + (arg.toBool() ? QString("true") : QString("false"));
 		} else {
-			result += ", Unknown Argument Type: " + QString::fromStdString(arg.typeName());
+			result += ", Unknown Argument Type: " + QString::fromLatin1(arg.typeName());
 		}
 	}
 	return result;
@@ -159,13 +159,13 @@ void OSCMessage::printToQDebug() const
 	qDebug() << "Path: " << m_path;
 	for (int i=0; i<m_arguments.size(); ++i) {
 		const QVariant& arg = m_arguments[i];
-		if (arg.type() == QVariant::Int) {
+		if (arg.typeId() == QMetaType::Int) {
 			qDebug() << i << " Int Argument: " << arg.toInt();
-		} else if (arg.type() == QVariant::Double) {
+		} else if (arg.typeId() == QMetaType::Double) {
 			qDebug() << i << " Double Argument: " << arg.toDouble();
-		} else if (arg.type() == QVariant::String) {
+		} else if (arg.typeId() == QMetaType::QString) {
 			qDebug() << i << " String Argument: " << arg.toString();
-		} else if (arg.type() == QVariant::Bool) {
+		} else if (arg.typeId() == QMetaType::Bool) {
 			qDebug() << i << " Bool Argument: " << arg.toBool();
 		} else {
 			qDebug() << i << " Unknown Argument Type: " << arg.typeName();

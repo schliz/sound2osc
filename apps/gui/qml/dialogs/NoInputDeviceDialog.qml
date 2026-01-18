@@ -26,16 +26,16 @@ MessageDialog {
 	title: "No Input Device"
 	text: "Could not find any input devices."
 
-	icon: StandardIcon.Critical
-	standardButtons: StandardButton.Retry | StandardButton.Close
+	buttons: MessageDialog.Retry | MessageDialog.Close
 	modality: Qt.ApplicationModal
 
-	onAccepted: {
-		visible = false
-		controller.initAudioInput()
-	}
-	onRejected: {
-		visible = false
-		Qt.quit()
+	onButtonClicked: function(button, role) {
+		if (button === MessageDialog.Retry) {
+			visible = false
+			controller.initAudioInput()
+		} else {
+			visible = false
+			Qt.quit()
+		}
 	}
 }

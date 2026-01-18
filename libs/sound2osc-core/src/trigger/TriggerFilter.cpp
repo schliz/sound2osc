@@ -36,11 +36,11 @@ TriggerFilter::TriggerFilter(OSCNetworkManager* osc, TriggerOscParameters& oscPa
 	, m_oscParameters(oscParameters)
 {
 	m_onDelayTimer.setSingleShot(true);
-	connect(&m_onDelayTimer, SIGNAL(timeout()), this, SLOT(onOnDelayEnd()));
+	connect(&m_onDelayTimer, &QTimer::timeout, this, &TriggerFilter::onOnDelayEnd);
 	m_maxHoldTimer.setSingleShot(true);
-	connect(&m_maxHoldTimer, SIGNAL(timeout()), this, SLOT(onMaxHoldEnd()));
+	connect(&m_maxHoldTimer, &QTimer::timeout, this, &TriggerFilter::onMaxHoldEnd);
 	m_offDelayTimer.setSingleShot(true);
-	connect(&m_offDelayTimer, SIGNAL(timeout()), this, SLOT(onOffDelayEnd()));
+	connect(&m_offDelayTimer, &QTimer::timeout, this, &TriggerFilter::onOffDelayEnd);
 }
 
 void TriggerFilter::triggerOn()

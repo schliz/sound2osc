@@ -91,7 +91,8 @@ Item {
         id: invalidFXNumberDialog
         title: "Invalid Effect Number"
         modality: Qt.ApplicationModal
-        onAccepted: {
+        buttons: MessageDialog.Ok
+        onButtonClicked: {
             invalidFXNumberDialog.close()
         }
     }

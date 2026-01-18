@@ -166,7 +166,8 @@ Item {
         id: invalidInputDialog
         title: "Invalid Input"
         modality: Qt.ApplicationModal
-        onAccepted: {
+        buttons: MessageDialog.Ok
+        onButtonClicked: {
             invalidInputDialog.close()
         }
     }

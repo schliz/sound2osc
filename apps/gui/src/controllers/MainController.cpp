@@ -82,15 +82,15 @@ MainController::~MainController()
 void MainController::initBeforeQmlIsLoaded()
 {
 	// init everything that can or must be done before QML file is loaded:
-	connect(&m_osc, SIGNAL(messageReceived(OSCMessage)), this, SIGNAL(messageReceived(OSCMessage)));
-	connect(&m_osc, SIGNAL(packetSent()), this, SIGNAL(packetSent()));
-	connect(&m_osc, SIGNAL(useTcpChanged()), this, SIGNAL(useTcpChanged()));
-	connect(&m_osc, SIGNAL(isConnectedChanged()), this, SIGNAL(isConnectedChanged()));
-	connect(&m_osc, SIGNAL(isConnectedChanged()), this, SLOT(onConnectedChanged()));
-	connect(&m_osc, SIGNAL(addressChanged()), this, SIGNAL(addressChanged()));
-	connect(&m_osc, SIGNAL(logChanged()), this, SIGNAL(oscLogChanged()));
-	connect(&m_osc, SIGNAL(messageReceived(OSCMessage)), &m_oscMapping, SLOT(handleMessage(OSCMessage)));
-	connect(&m_oscUpdateTimer, SIGNAL(timeout()), &m_oscMapping, SLOT(sendLevelFeedback()));
+	connect(&m_osc, &OSCNetworkManager::messageReceived, this, &MainController::messageReceived);
+	connect(&m_osc, &OSCNetworkManager::packetSent, this, &MainController::packetSent);
+	connect(&m_osc, &OSCNetworkManager::useTcpChanged, this, &MainController::useTcpChanged);
+	connect(&m_osc, &OSCNetworkManager::isConnectedChanged, this, &MainController::isConnectedChanged);
+	connect(&m_osc, &OSCNetworkManager::isConnectedChanged, this, &MainController::onConnectedChanged);
+	connect(&m_osc, &OSCNetworkManager::addressChanged, this, &MainController::addressChanged);
+	connect(&m_osc, &OSCNetworkManager::logChanged, this, &MainController::oscLogChanged);
+	connect(&m_osc, &OSCNetworkManager::messageReceived, &m_oscMapping, &OSCMapping::handleMessage);
+	connect(&m_oscUpdateTimer, &QTimer::timeout, &m_oscMapping, &OSCMapping::sendLevelFeedback);
 
 	// load settings that may be used while QML file is loaded:
 	loadPresetIndependentSettings();
@@ -107,8 +107,8 @@ void MainController::initAfterQmlIsLoaded()
 	// create global QML property that points to the main Window:
 	m_qmlEngine->rootContext()->setContextProperty("mainWindow", QVariant::fromValue<QQuickWindow*>(getMainWindow()));
 
-	connect(this, SIGNAL(presetChanged()), this, SLOT(onPresetChanged()));
-	connect(getMainWindow(), SIGNAL(visibilityChanged(QWindow::Visibility)), this, SLOT(onVisibilityChanged()));
+	connect(this, &MainController::presetChanged, this, &MainController::onPresetChanged);
+	connect(getMainWindow(), &QQuickWindow::visibilityChanged, this, &MainController::onVisibilityChanged);
 }
 
 void MainController::initializeGenerators()
@@ -153,12 +153,12 @@ void MainController::connectGeneratorsWithGui()
 	m_qmlEngine->rootContext()->setContextProperty("silenceController", m_silenceController);
 
 	// connect the presetChanged signal to the onPresetChanged slot of this controller:
-	connect(m_bassController, SIGNAL(presetChanged()), this, SLOT(onPresetChanged()));
-	connect(m_loMidController, SIGNAL(presetChanged()), this, SLOT(onPresetChanged()));
-	connect(m_hiMidController, SIGNAL(presetChanged()), this, SLOT(onPresetChanged()));
-	connect(m_highController, SIGNAL(presetChanged()), this, SLOT(onPresetChanged()));
-	connect(m_envelopeController, SIGNAL(presetChanged()), this, SLOT(onPresetChanged()));
-	connect(m_silenceController, SIGNAL(presetChanged()), this, SLOT(onPresetChanged()));
+	connect(m_bassController, &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
+	connect(m_loMidController, &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
+	connect(m_hiMidController, &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
+	connect(m_highController, &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
+	connect(m_envelopeController, &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
+	connect(m_silenceController, &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
 
 }
 
@@ -214,11 +214,11 @@ void MainController::initAudioInput()
 	}
 
 	// start FFT update timer:
-	connect(&m_fftUpdateTimer, SIGNAL(timeout()), this, SLOT(updateFFT()));
+	connect(&m_fftUpdateTimer, &QTimer::timeout, this, &MainController::updateFFT);
 	m_fftUpdateTimer.start(1000.0 / FFT_UPDATE_RATE);
 
     // set up the BPM timer and start it
-    connect(&m_bpmUpdatetimer, SIGNAL(timeout()), this, SLOT(updateBPM()));
+    connect(&m_bpmUpdatetimer, &QTimer::timeout, this, &MainController::updateBPM);
     setBPMActive(m_bpmActive);
 }
 
@@ -450,7 +450,7 @@ void MainController::restoreWindowGeometry()
 	if (!window) return;
 	if (!windowGeometry.isNull()) window->setGeometry(windowGeometry);
 	if (maximized) window->showMaximized();
-	connect(window, SIGNAL(closing(QQuickCloseEvent*)), m_qmlEngine, SIGNAL(quit()));
+	connect(window, &QQuickWindow::closing, m_qmlEngine, &QQmlApplicationEngine::quit);
 
 	// TODO: restore visibility of details in trigger settings
 	// TODO: restore position of splitView handle

@@ -22,7 +22,7 @@ import QtQuick
 import QtQuick.Controls
 
 import QtQuick.Dialogs
-import Qt.labs.folderlistmodel 2.1
+import Qt.labs.folderlistmodel
 
 import "style"  // import all files in style dir
 
@@ -108,22 +108,22 @@ Dialog {
 								property string presetPath
 								title: "Unsaved Changes"
 								text: "Discard unsaved changes?"
-								standardButtons: StandardButton.Cancel | StandardButton.Discard | StandardButton.Save
+								buttons: MessageDialog.Cancel | MessageDialog.Discard | MessageDialog.Save
 								modality: Qt.ApplicationModal
-								onAccepted: {
-									// Save Button:
-									controller.saveCurrentPreset()
-									controller.loadPreset(presetPath)
-									unsavedChangesDialog.close()
-								}
-								onDiscard: {
-									// Discard Button:
-									controller.loadPreset(presetPath)
-									unsavedChangesDialog.close()
-								}
-								onRejected: {
-									// Cancel Button:
-									unsavedChangesDialog.close()
+								onButtonClicked: function(button, role) {
+									if (button === MessageDialog.Save) {
+										// Save Button:
+										controller.saveCurrentPreset()
+										controller.loadPreset(presetPath)
+										unsavedChangesDialog.close()
+									} else if (button === MessageDialog.Discard) {
+										// Discard Button:
+										controller.loadPreset(presetPath)
+										unsavedChangesDialog.close()
+									} else {
+										// Cancel Button:
+										unsavedChangesDialog.close()
+									}
 								}
 							}
 
@@ -151,14 +151,15 @@ Dialog {
 								property string presetPath
 								title: "Delete Preset"
 								text: "Delete Preset '" + presetName + "'?"
-								standardButtons: StandardButton.Cancel | StandardButton.Yes
+								buttons: MessageDialog.Cancel | MessageDialog.Yes
 								modality: Qt.ApplicationModal
-								onYes: {
-									controller.deletePreset(presetPath)
-									deleteDialog.close()
-								}
-								onRejected: {
-									deleteDialog.close()
+								onButtonClicked: function(button, role) {
+									if (button === MessageDialog.Yes) {
+										controller.deletePreset(presetPath)
+										deleteDialog.close()
+									} else {
+										deleteDialog.close()
+									}
 								}
 							}
 

@@ -32,21 +32,21 @@
 #include <QDebug>
 
 // the number of samples used for FFT expressed as an exponent of 2
-static const int NUM_SAMPLES_EXPONENT = 12;
+static constexpr int NUM_SAMPLES_EXPONENT = 12;
 
 // the real number of samples calculated from NUM_SAMPLES_EXPONENT
-static const int NUM_SAMPLES = qPow(2, NUM_SAMPLES_EXPONENT);
+static constexpr int NUM_SAMPLES = 1 << NUM_SAMPLES_EXPONENT;  // 2^12 = 4096
 
 // maximum absolute value in the result of the FFT
 // estimated from previous tests (exponent/samples: max value):
 // 11/2048: 51, 12/4096: 96, 13/8192: 195, 14/16384: 350
-static const int MAX_FFT_VALUE = 96;
+static constexpr int MAX_FFT_VALUE = 96;
 
 // number of frequency bins in the resulting ScaledSpectrum
-static const int SCALED_SPECTRUM_LENGTH = 200;
+static constexpr int SCALED_SPECTRUM_LENGTH = 200;
 
 // base frequency of the ScaledSpectrum in Hz
-static const int SCALED_SPECTRUM_BASE_FREQ = 20;  // ms
+static constexpr int SCALED_SPECTRUM_BASE_FREQ = 20;  // Hz
 
 // A class to prepare the content of an audio buffer for FFT,
 // calculate the FFT and create a ScaledSpectrum of the results.

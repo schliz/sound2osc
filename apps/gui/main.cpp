@@ -30,7 +30,7 @@
 
 
 int main(int argc, char *argv[]) {
-    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    // Qt6: High DPI scaling is enabled by default, AA_EnableHighDpiScaling is deprecated
     QApplication app(argc, argv);
 	app.setWindowIcon(QIcon(":/images/icons/etcicon.ico"));
 
@@ -57,9 +57,9 @@ int main(int argc, char *argv[]) {
     engine.rootContext()->setContextProperty("controller", controller);
 
 	// quit QGuiApplication when quit signal is emitted:
-	QObject::connect(&engine, SIGNAL(quit()), &app, SLOT(quit()));
+	QObject::connect(&engine, &QQmlApplicationEngine::quit, &app, &QCoreApplication::quit);
 	// call onExit() method of controller when app is about to quit:
-    QObject::connect(&app, SIGNAL(aboutToQuit()), controller, SLOT(onExit()));
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, controller, &MainController::onExit);
 
     controller->initBeforeQmlIsLoaded();
 	engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));

@@ -46,13 +46,13 @@ OSCNetworkManager::OSCNetworkManager()
 {
 	// prepare timer that is used to try to connect again to TCP target:
 	m_tryConnectAgainTimer.setSingleShot(true);
-	connect(&m_tryConnectAgainTimer, SIGNAL(timeout()), this, SLOT(tryToConnectTCP()));
+	connect(&m_tryConnectAgainTimer, &QTimer::timeout, this, &OSCNetworkManager::tryToConnectTCP);
 
 	// connect TCP socket with onConnected and onError slots:
-	connect(&m_tcpSocket, SIGNAL(connected()), this, SLOT(onConnected()));
+	connect(&m_tcpSocket, &QTcpSocket::connected, this, &OSCNetworkManager::onConnected);
 	connect(&m_tcpSocket, &QAbstractSocket::errorOccurred, this, &OSCNetworkManager::onError);
-	connect(&m_udpSocket, SIGNAL(readyRead()), this, SLOT(readIncomingUdpDatagrams()));
-	connect(&m_tcpSocket, SIGNAL(readyRead()), this, SLOT(readIncomingTcpStream()));
+	connect(&m_udpSocket, &QUdpSocket::readyRead, this, &OSCNetworkManager::readIncomingUdpDatagrams);
+	connect(&m_tcpSocket, &QTcpSocket::readyRead, this, &OSCNetworkManager::readIncomingTcpStream);
 
 	// try to connect:
 	reconnect();
