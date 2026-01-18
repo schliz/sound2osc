@@ -1,6 +1,6 @@
 # Sound2OSC Modernization Plan
 
-**Status:** Phase 1 - In Progress  
+**Status:** Phase 1 - Complete, Phase 2 - Ready  
 **Last Updated:** 2026-01-18  
 **Target:** Modern cross-platform build with Qt6, C++17, CMake
 
@@ -147,20 +147,21 @@ sound2osc/
 
 ### Phase 1: Repository Cleanup & Build System (Current)
 
-**Status:** In Progress
+**Status:** Complete
 
 - [x] Create modernization plan document
 - [x] Create AGENTS.md
-- [ ] Remove `src/sound2light_installer_data_windows.zip` from git history
-- [ ] Create new directory structure
-- [ ] Set up root CMakeLists.txt with Qt6 support
-- [ ] Create cmake/ helper modules
-- [ ] Move and reorganize source files to new structure
-- [ ] Create libs/sound2osc-core CMake configuration
-- [ ] Create apps/gui CMake configuration
-- [ ] Update .gitignore for CMake out-of-source builds
-- [ ] Update build documentation for CMake
-- [ ] Verify build works on Debian 13/14
+- [x] Remove `src/sound2light_installer_data_windows.zip` from git history
+- [x] Create new directory structure
+- [x] Set up root CMakeLists.txt with Qt6 support
+- [x] Create cmake/ helper modules
+- [x] Move and reorganize source files to new structure
+- [x] Create libs/sound2osc-core CMake configuration
+- [x] Create apps/gui CMake configuration
+- [x] Update .gitignore for CMake out-of-source builds
+- [x] Update build documentation for CMake
+- [x] Verify build works on Debian 13/14
+- [x] Remove legacy src/ and doc/ directories
 
 **Deliverables:**
 - Working CMake build on Linux
