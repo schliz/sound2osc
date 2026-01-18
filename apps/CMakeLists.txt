@@ -3,7 +3,7 @@
 
 add_subdirectory(gui)
 
-# Future: headless application
-# if(SOUND2OSC_BUILD_HEADLESS)
-#     add_subdirectory(headless)
-# endif()
+# Headless application (CLI/daemon)
+if(SOUND2OSC_BUILD_HEADLESS)
+    add_subdirectory(headless)
+endif()

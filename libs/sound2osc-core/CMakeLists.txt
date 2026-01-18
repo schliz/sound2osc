@@ -24,6 +24,14 @@ set(CORE_SOURCES
     src/osc/OSCParser.cpp
     src/osc/OSCMessage.cpp
     src/osc/OSCNetworkManager.cpp
+
+    # Logging module
+    src/logging/Logger.cpp
+
+    # Config module
+    src/config/JsonConfigStore.cpp
+    src/config/PresetManager.cpp
+    src/config/SettingsManager.cpp
 )
 
 set(CORE_HEADERS
@@ -58,6 +66,15 @@ set(CORE_HEADERS
     include/sound2osc/core/QCircularBuffer.h
     include/sound2osc/core/utils.h
     include/sound2osc/core/versionInfo.h
+
+    # Logging module
+    include/sound2osc/logging/Logger.h
+
+    # Config module
+    include/sound2osc/config/ConfigStore.h
+    include/sound2osc/config/JsonConfigStore.h
+    include/sound2osc/config/PresetManager.h
+    include/sound2osc/config/SettingsManager.h
 )
 
 add_library(sound2osc-core STATIC

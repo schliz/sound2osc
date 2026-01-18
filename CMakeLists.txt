@@ -42,7 +42,7 @@ include(cmake/Platform.cmake)
 # Dependencies
 # -----------------------------------------------------------------------------
 # Qt6 is required for both core library (QtCore, QtNetwork) and GUI
-find_package(Qt6 REQUIRED COMPONENTS Core Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Network Multimedia)
 
 if(SOUND2OSC_BUILD_GUI)
     find_package(Qt6 REQUIRED COMPONENTS
@@ -51,7 +51,6 @@ if(SOUND2OSC_BUILD_GUI)
         Qml
         Quick
         QuickControls2
-        Multimedia
     )
 endif()
 
@@ -75,7 +74,7 @@ target_include_directories(ffft INTERFACE
 # -----------------------------------------------------------------------------
 add_subdirectory(libs)
 
-if(SOUND2OSC_BUILD_GUI)
+if(SOUND2OSC_BUILD_GUI OR SOUND2OSC_BUILD_HEADLESS)
     add_subdirectory(apps)
 endif()
 
