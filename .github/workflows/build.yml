@@ -15,9 +15,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-22.04
-            container: debian:bookworm
-            install_cmd: apt-get update && apt-get install -y git build-essential cmake ninja-build qt6-base-dev qt6-multimedia-dev qt6-declarative-dev qt6-quickcontrols2-dev libgl1-mesa-dev qml6-module-qtquick-layouts qml6-module-qtquick-controls qml6-module-qtquick-dialogs qml6-module-qtquick-window qml6-module-qtmultimedia
+          - os: linux-debian
+            container: debian:trixie
+            install_cmd: apt-get update && apt-get install -y git build-essential cmake ninja-build qt6-base-dev qt6-multimedia-dev qt6-declarative-dev libgl1-mesa-dev qml6-module-qtquick-layouts qml6-module-qtquick-controls qml6-module-qtquick-dialogs qml6-module-qtquick-window qml6-module-qtmultimedia
           - os: windows-latest
             container: null
             qt_version: 6.6.0
@@ -45,7 +45,12 @@ jobs:
       if: runner.os == 'Linux'
       run: ${{ matrix.install_cmd }}
 
-    - name: Configure CMake
+    - name: Configure CMake (Windows)
+      if: runner.os == 'Windows'
+      run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DSOUND2OSC_BUILD_HEADLESS=ON -DSOUND2OSC_BUILD_TESTS=ON
+
+    - name: Configure CMake (Unix)
+      if: runner.os != 'Windows'
       run: cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DSOUND2OSC_BUILD_HEADLESS=ON -DSOUND2OSC_BUILD_TESTS=ON
 
     - name: Build
