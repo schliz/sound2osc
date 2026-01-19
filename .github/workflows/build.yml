@@ -37,6 +37,12 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Setup Python
+      if: runner.os != 'Linux'
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
     - name: Install Qt (Windows/macOS)
       if: runner.os != 'Linux'
       uses: jurplel/install-qt-action@v4
@@ -44,7 +50,6 @@ jobs:
         version: ${{ matrix.qt_version }}
         modules: ${{ matrix.qt_modules }}
         cache: true
-        setup-python: false
         aqtversion: ==3.1.18
 
     - name: Install Dependencies (Linux)
