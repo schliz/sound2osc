@@ -10,19 +10,22 @@ jobs:
   build:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, windows-latest, macos-latest]
         include:
           - os: ubuntu-22.04
-            install_cmd: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build qt6-base-dev qt6-multimedia-dev qt6-declarative-dev qt6-quickcontrols2-dev libgl1-mesa-dev qml6-module-qtquick-layouts qml6-module-qtquick-controls qml6-module-qtquick-dialogs qml6-module-qtquick-window qml6-module-qtmultimedia
+            container: debian:bookworm
+            install_cmd: apt-get update && apt-get install -y git build-essential cmake ninja-build qt6-base-dev qt6-multimedia-dev qt6-declarative-dev qt6-quickcontrols2-dev libgl1-mesa-dev qml6-module-qtquick-layouts qml6-module-qtquick-controls qml6-module-qtquick-dialogs qml6-module-qtquick-window qml6-module-qtmultimedia
           - os: windows-latest
+            container: null
             qt_version: 6.6.0
-            qt_modules: qtmultimedia qtdeclarative qtshadertools qt5compat
+            qt_modules: qtmultimedia qtshadertools qt5compat
           - os: macos-latest
+            container: null
             qt_version: 6.6.0
-            qt_modules: qtmultimedia qtdeclarative qtshadertools qt5compat
+            qt_modules: qtmultimedia qtshadertools qt5compat
 
     steps:
     - name: Checkout code
