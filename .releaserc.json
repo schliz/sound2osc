@@ -34,9 +34,9 @@
             "name": "sound2osc-headless-windows.exe"
           },
           {
-            "path": "artifacts/sound2osc-macos",
-            "label": "sound2osc-macos (GUI Application)",
-            "name": "sound2osc-macos"
+            "path": "artifacts/sound2osc-macos.app.zip",
+            "label": "sound2osc-macos.app.zip (GUI Application Bundle)",
+            "name": "sound2osc-macos.app.zip"
           },
           {
             "path": "artifacts/sound2osc-headless-macos",

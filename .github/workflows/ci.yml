@@ -96,11 +96,25 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: sound2osc-${{ matrix.artifact_suffix }}
-        path: build/apps/gui/Release/${{ matrix.gui_name }}
+        path: build/bin/Release/${{ matrix.gui_name }}
         if-no-files-found: error
 
-    - name: Upload GUI Executable (Unix)
-      if: runner.os != 'Windows'
+    - name: Zip macOS GUI App Bundle
+      if: runner.os == 'macOS'
+      run: |
+        cd build/bin
+        zip -r sound2osc-macos.app.zip sound2osc.app
+
+    - name: Upload GUI Executable (macOS)
+      if: runner.os == 'macOS'
+      uses: actions/upload-artifact@v4
+      with:
+        name: sound2osc-${{ matrix.artifact_suffix }}
+        path: build/bin/sound2osc-macos.app.zip
+        if-no-files-found: error
+
+    - name: Upload GUI Executable (Linux)
+      if: runner.os == 'Linux'
       uses: actions/upload-artifact@v4
       with:
         name: sound2osc-${{ matrix.artifact_suffix }}
@@ -113,7 +127,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: sound2osc-headless-${{ matrix.artifact_suffix }}
-        path: build/apps/headless/Release/${{ matrix.headless_name }}
+        path: build/bin/Release/${{ matrix.headless_name }}
         if-no-files-found: error
 
     - name: Upload Headless Executable (Unix)
@@ -185,8 +199,7 @@ jobs:
           mv sound2osc.exe sound2osc-windows.exe || true
           mv sound2osc-headless.exe sound2osc-headless-windows.exe || true
           
-          # macOS executables (no extension)
-          mv sound2osc sound2osc-macos || true
+          # macOS: .app.zip is already named correctly, just move headless
           mv sound2osc-headless sound2osc-headless-macos || true
           
           # List all artifacts for verification
@@ -197,7 +210,6 @@ jobs:
         run: |
           chmod +x artifacts/sound2osc-linux || true
           chmod +x artifacts/sound2osc-headless-linux || true
-          chmod +x artifacts/sound2osc-macos || true
           chmod +x artifacts/sound2osc-headless-macos || true
 
       - name: Setup Node.js
