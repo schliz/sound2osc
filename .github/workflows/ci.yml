@@ -1,0 +1,214 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+permissions:
+  contents: write       # Required to create releases, tags, and commits
+  issues: write         # Required to comment on issues
+  pull-requests: write  # Required to comment on PRs
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            container: debian:trixie
+            install_cmd: apt-get update && apt-get install -y git build-essential cmake ninja-build qt6-base-dev qt6-multimedia-dev qt6-declarative-dev libgl1-mesa-dev qml6-module-qtquick-layouts qml6-module-qtquick-controls qml6-module-qtquick-dialogs qml6-module-qtquick-window qml6-module-qtmultimedia
+            artifact_suffix: linux
+            gui_name: sound2osc
+            headless_name: sound2osc-headless
+          - os: windows-latest
+            container: null
+            qt_version: 6.6.0
+            qt_modules: qtmultimedia qtshadertools qt5compat
+            artifact_suffix: windows
+            gui_name: sound2osc.exe
+            headless_name: sound2osc-headless.exe
+          - os: macos-latest
+            container: null
+            qt_version: 6.6.0
+            qt_modules: qtmultimedia qtshadertools qt5compat
+            artifact_suffix: macos
+            gui_name: sound2osc
+            headless_name: sound2osc-headless
+
+    steps:
+    # We need to install git manually in Linux container environments
+    - name: Pre-install Git (Linux)
+      if: runner.os == 'Linux'
+      run: apt-get update && apt-get install -y git
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Setup Python
+      if: runner.os != 'Linux'
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Qt (Windows/macOS)
+      if: runner.os != 'Linux'
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: ${{ matrix.qt_version }}
+        modules: ${{ matrix.qt_modules }}
+        cache: true
+        aqtversion: ==3.1.18
+
+    - name: Install Dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: ${{ matrix.install_cmd }}
+
+    - name: Configure CMake (Windows)
+      if: runner.os == 'Windows'
+      run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DSOUND2OSC_BUILD_HEADLESS=ON -DSOUND2OSC_BUILD_TESTS=ON
+
+    - name: Configure CMake (Unix)
+      if: runner.os != 'Windows'
+      run: cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DSOUND2OSC_BUILD_HEADLESS=ON -DSOUND2OSC_BUILD_TESTS=ON
+
+    - name: Build
+      run: cmake --build build --config Release --verbose
+
+    - name: Test (Windows)
+      if: runner.os == 'Windows'
+      run: ctest --test-dir build --build-config Release --output-on-failure
+
+    - name: Test (Unix)
+      if: runner.os != 'Windows'
+      run: ctest --test-dir build --output-on-failure
+
+    # Upload GUI application
+    - name: Upload GUI Executable (Windows)
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: sound2osc-${{ matrix.artifact_suffix }}
+        path: build/apps/gui/Release/${{ matrix.gui_name }}
+        if-no-files-found: error
+
+    - name: Upload GUI Executable (Unix)
+      if: runner.os != 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: sound2osc-${{ matrix.artifact_suffix }}
+        path: build/bin/${{ matrix.gui_name }}
+        if-no-files-found: error
+
+    # Upload Headless application
+    - name: Upload Headless Executable (Windows)
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: sound2osc-headless-${{ matrix.artifact_suffix }}
+        path: build/apps/headless/Release/${{ matrix.headless_name }}
+        if-no-files-found: error
+
+    - name: Upload Headless Executable (Unix)
+      if: runner.os != 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: sound2osc-headless-${{ matrix.artifact_suffix }}
+        path: build/bin/${{ matrix.headless_name }}
+        if-no-files-found: error
+
+  release:
+    name: Semantic Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Download all build artifacts
+      - name: Download Linux GUI
+        uses: actions/download-artifact@v4
+        with:
+          name: sound2osc-linux
+          path: artifacts/
+
+      - name: Download Linux Headless
+        uses: actions/download-artifact@v4
+        with:
+          name: sound2osc-headless-linux
+          path: artifacts/
+
+      - name: Download Windows GUI
+        uses: actions/download-artifact@v4
+        with:
+          name: sound2osc-windows
+          path: artifacts/
+
+      - name: Download Windows Headless
+        uses: actions/download-artifact@v4
+        with:
+          name: sound2osc-headless-windows
+          path: artifacts/
+
+      - name: Download macOS GUI
+        uses: actions/download-artifact@v4
+        with:
+          name: sound2osc-macos
+          path: artifacts/
+
+      - name: Download macOS Headless
+        uses: actions/download-artifact@v4
+        with:
+          name: sound2osc-headless-macos
+          path: artifacts/
+
+      # Rename artifacts to include file extensions and proper naming
+      - name: Rename artifacts
+        run: |
+          cd artifacts
+          # Linux executables (no extension)
+          mv sound2osc sound2osc-linux || true
+          mv sound2osc-headless sound2osc-headless-linux || true
+          
+          # Windows executables (already have .exe)
+          mv sound2osc.exe sound2osc-windows.exe || true
+          mv sound2osc-headless.exe sound2osc-headless-windows.exe || true
+          
+          # macOS executables (no extension)
+          mv sound2osc sound2osc-macos || true
+          mv sound2osc-headless sound2osc-headless-macos || true
+          
+          # List all artifacts for verification
+          ls -lh
+
+      # Make executables executable (Unix platforms)
+      - name: Set executable permissions
+        run: |
+          chmod +x artifacts/sound2osc-linux || true
+          chmod +x artifacts/sound2osc-headless-linux || true
+          chmod +x artifacts/sound2osc-macos || true
+          chmod +x artifacts/sound2osc-headless-macos || true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
+      - name: Install dependencies
+        run: npm install semantic-release @semantic-release/git @semantic-release/changelog @semantic-release/github -D
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release

@@ -10,6 +10,48 @@
       }
     ],
     [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "artifacts/sound2osc-linux",
+            "label": "sound2osc-linux (GUI Application)",
+            "name": "sound2osc-linux"
+          },
+          {
+            "path": "artifacts/sound2osc-headless-linux",
+            "label": "sound2osc-headless-linux (CLI Application)",
+            "name": "sound2osc-headless-linux"
+          },
+          {
+            "path": "artifacts/sound2osc-windows.exe",
+            "label": "sound2osc-windows.exe (GUI Application)",
+            "name": "sound2osc-windows.exe"
+          },
+          {
+            "path": "artifacts/sound2osc-headless-windows.exe",
+            "label": "sound2osc-headless-windows.exe (CLI Application)",
+            "name": "sound2osc-headless-windows.exe"
+          },
+          {
+            "path": "artifacts/sound2osc-macos",
+            "label": "sound2osc-macos (GUI Application)",
+            "name": "sound2osc-macos"
+          },
+          {
+            "path": "artifacts/sound2osc-headless-macos",
+            "label": "sound2osc-headless-macos (CLI Application)",
+            "name": "sound2osc-headless-macos"
+          },
+          {
+            "path": "docs/CHANGELOG.md",
+            "label": "CHANGELOG.md",
+            "name": "CHANGELOG.md"
+          }
+        ]
+      }
+    ],
+    [
       "@semantic-release/git",
       {
         "assets": ["docs/CHANGELOG.md"],
