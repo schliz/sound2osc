@@ -28,6 +28,10 @@ jobs:
             qt_modules: qtmultimedia qtshadertools qt5compat
 
     steps:
+    - name: Pre-install Git (Linux)
+      if: runner.os == 'Linux'
+      run: apt-get update && apt-get install -y git
+
     - name: Checkout code
       uses: actions/checkout@v4
       with:
