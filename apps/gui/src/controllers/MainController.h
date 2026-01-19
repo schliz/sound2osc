@@ -28,13 +28,15 @@
 #include <sound2osc/audio/AudioInputInterface.h>
 #include <sound2osc/osc/OSCNetworkManager.h>
 #include <sound2osc/core/versionInfo.h>
+#include <sound2osc/config/SettingsManager.h>
+#include <sound2osc/config/PresetManager.h>
 
 #include "OSCMapping.h"
 
 #include <QObject>
 #include <QDebug>
-#include <QSettings>
 #include <QQmlApplicationEngine>
+#include <memory>
 #include <QQuickWindow>
 #include <QFileInfo>
 #include <QQmlComponent>
@@ -84,7 +86,10 @@ class MainController : public QObject
     Q_PROPERTY(bool waveformVisible READ getWaveformVisible WRITE setWaveformVisible NOTIFY waveformVisibleChanged)
 
 public:
-    explicit MainController(QQmlApplicationEngine* m_qmlEngine, QObject* parent = nullptr);
+    explicit MainController(QQmlApplicationEngine* m_qmlEngine,
+                            std::shared_ptr<sound2osc::SettingsManager> settingsManager,
+                            sound2osc::PresetManager* presetManager,
+                            QObject* parent = nullptr);
 	~MainController();
 
 	// initializes everything that has to be done before QML is loaded
@@ -362,8 +367,8 @@ private:
 	// returns the main window
 	QQuickWindow* getMainWindow() const;
 
-	// checks if settings format is valid
-	bool settingsFormatIsValid(QSettings& settings) const;
+	// checks if settings format is valid (for legacy INI preset files)
+	bool settingsFormatIsValid(const QString& filePath) const;
 
 private slots:
 	// sends current state via OSC if connection changed
@@ -379,6 +384,8 @@ public:  // to allow access from OSCMapping class without getters
 
 protected:
 	QQmlApplicationEngine*		m_qmlEngine;  // pointer to QmlEngine (created in main.cpp)
+	std::shared_ptr<sound2osc::SettingsManager> m_settingsManager;  // Application settings
+	sound2osc::PresetManager*   m_presetManager;  // Preset management (owned by main.cpp)
 	QVector<TriggerGeneratorInterface*> m_triggerContainer;  // list of all TriggerGenerators
 	MonoAudioBuffer				m_buffer;  // MonoAudioBuffer instance
 	AudioInputInterface*		m_audioInput;  // pointer to AudioInputInterface implementation
