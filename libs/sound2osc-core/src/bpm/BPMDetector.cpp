@@ -149,13 +149,13 @@
 static const int NUM_BPM_SAMPLES_EXPONENT = 8;
 
 // the real number of samples calculated from NUM_BPM_SAMPLES_EXPONENT
-static const int NUM_BPM_SAMPLES = qPow(2, NUM_BPM_SAMPLES_EXPONENT);
+static const int NUM_BPM_SAMPLES = 1 << NUM_BPM_SAMPLES_EXPONENT;
 
 // the number of samples fft-ed for each sample (more to allow overlap) as an exponent of 2
 static const int NUM_BPM_FFT_SAMPLES_EXPONENT = 11;
 
 // the number of samples fft-ed for each sample (more to allow overlap
-static const int NUM_BPM_FFT_SAMPLES = qPow(2, NUM_BPM_FFT_SAMPLES_EXPONENT);
+static const int NUM_BPM_FFT_SAMPLES = 1 << NUM_BPM_FFT_SAMPLES_EXPONENT;
 
 // Sampling Rate
 static const int SAMPLE_RATE = 44100;
@@ -179,11 +179,11 @@ static const int INTERVALS_TO_STORE = SECONDS_OF_INTERVALS_TO_STORE * BPM_UPDATE
 
 // ------------------------------- Utility Functions for BPM Detection -------------------------------
 inline float bpmToMs(const float bpm) {
-    return 60000.0 / bpm;
+    return 60000.0f / bpm;
 }
 
 inline float msToBPM(const float ms) {
-    return 60000.0 / ms;
+    return 60000.0f / ms;
 }
 
 inline int frequencyToIndex(const int frequency) {
@@ -203,10 +203,10 @@ constexpr int GLOBAL_MAX_BPM = 300;
 
 inline float bpmInRange(float bpm, const int minBPM) {
     if (minBPM > 0) {
-        while (bpm < minBPM && bpm != 0) {
+        while (bpm < static_cast<float>(minBPM) && bpm != 0) {
             bpm *= 2;
         }
-        while (bpm >= minBPM*2) {
+        while (bpm >= static_cast<float>(minBPM*2)) {
             bpm /= 2;
         }
     }
@@ -270,7 +270,7 @@ void BPMDetector::calculateWindow()
     // Hann Window function
     // used to prepare the PCM data for FFT
     for (int i=0; i<NUM_BPM_FFT_SAMPLES; ++i) {
-        m_window[i] = 0.5f * (1 - qCos((2 * M_PI * i) / (NUM_BPM_FFT_SAMPLES - 1)));
+        m_window[i] = 0.5f * (1 - static_cast<float>(qCos((2 * M_PI * i) / (NUM_BPM_FFT_SAMPLES - 1))));
     }
 }
 
@@ -304,7 +304,7 @@ void BPMDetector::detectBPM()
     // add as many new samples to the spectral flux history as available
     int64_t currentNumPutSamples = m_inputBuffer.getNumPutSamples();
     while (currentNumPutSamples - m_lastInputBufferNumSamples > NUM_BPM_FFT_SAMPLES) {
-        updateSpectralFluxes(m_inputBuffer.getCapacity() - (currentNumPutSamples - m_lastInputBufferNumSamples));
+        updateSpectralFluxes(m_inputBuffer.getCapacity() - static_cast<int>(currentNumPutSamples - m_lastInputBufferNumSamples));
         m_lastInputBufferNumSamples += NUM_BPM_SAMPLES;
     }
 
@@ -345,7 +345,7 @@ void BPMDetector::updateSpectralFluxes(const int fromIndex)
 
     // apply hann window to new data to prepare it for the FFT
     for (int i=0; i < NUM_BPM_FFT_SAMPLES; ++i) {
-        m_buffer[i] = m_inputBuffer.at(fromIndex+i) * m_window[i];
+        m_buffer[i] = static_cast<float>(m_inputBuffer.at(fromIndex+i)) * m_window[i];
     }
 
     // apply FFT:
@@ -377,15 +377,15 @@ void BPMDetector::updateSpectralFluxes(const int fromIndex)
 
     // Sum up low, mid an high frequencies
     for (int i = 0; i < frequencyToIndex(200); i++) {
-        col[0] += qAbs(m_fftOutput[i])*1000;
+        col[0] += static_cast<int>(qAbs(m_fftOutput[i])*1000);
     }
 
     for (int i = frequencyToIndex(200); i < frequencyToIndex(2000); i+=10) {
-        col[1] += qAbs(m_fftOutput[i])*5000;
+        col[1] += static_cast<int>(qAbs(m_fftOutput[i])*5000);
     }
 
     for (int i = frequencyToIndex(2000); i < NUM_BPM_FFT_SAMPLES / 2; i+=20) {
-        col[2] += qAbs(m_fftOutput[i])*10000;
+        col[2] += static_cast<int>(qAbs(m_fftOutput[i])*10000);
     }
 
     // Normalize so that at least one value is 255
@@ -423,7 +423,7 @@ void BPMDetector::updateOnsets()
     for (int i=0; i < FRAMES_TO_CACHE; ++i) {
         average += m_spectralFluxBuffer[i];
     }
-    average = average / FRAMES_TO_CACHE;
+    average = average / static_cast<float>(FRAMES_TO_CACHE);
 
     float variance = 0.0;
     for (int i = 0; i < FRAMES_TO_CACHE; ++i) {
@@ -441,8 +441,8 @@ void BPMDetector::updateOnsets()
 
     const char w = 5; //window for local maximum detection
     const char m = 3; // multiplier to increase range before onset
-    const float pastThresholdWeight = 0.84;
-    const float averageThresholdDelta = 0.008;
+    const float pastThresholdWeight = 0.84f;
+    const float averageThresholdDelta = 0.008f;
 
     // detect onsets by iterating over spectral flux and checking for the three criteria
     // that a sample must fullfill to be considered an onset
@@ -515,18 +515,18 @@ const static int MAX_INTERVAL = 2000; // ms
 class BeatString
 {
 public:
-    BeatString(int interval, float score) :
+    BeatString(float interval, float score) :
         m_averageInterval(interval)
       , m_size(1)
       , m_nativeScore(score)
     {}
 
-    float getSize() { return m_size; }
+    float getSize() { return static_cast<float>(m_size); }
     float getScore() { return m_nativeScore; }
     float getAverageInterval() { return m_averageInterval; }
 
     void addInterval(float interval, float score) {
-        m_averageInterval = (m_size * m_averageInterval + interval) / (m_size + 1);
+        m_averageInterval = (static_cast<float>(m_size) * m_averageInterval + interval) / static_cast<float>(m_size + 1);
         m_nativeScore += score;
         ++m_size;
     }
@@ -549,16 +549,16 @@ protected:
 class IntervalCluster
 {
 public:
-    IntervalCluster(int interval) :
+    IntervalCluster(float interval) :
         m_averageInterval(interval)
       , m_size(1)
     {}
 
-    float getScore() { return m_size; }
+    float getScore() { return static_cast<float>(m_size); }
     float getAverageInterval() { return m_averageInterval; }
 
     void addInterval(float interval) {
-        m_averageInterval = (m_size * m_averageInterval + interval) / (m_size + 1);
+        m_averageInterval = (static_cast<float>(m_size) * m_averageInterval + interval) / static_cast<float>(m_size + 1);
         ++m_size;
     }
 
@@ -600,7 +600,7 @@ void BPMDetector::updateStrings()
                 if (m_onsetBuffer[j]) {
 
                     // Detect the interval and score, and continue right away if the interval is to short or to long
-                    float interval = framesToMs(j-i);
+                    float interval = static_cast<float>(framesToMs(j-i));
                     if (!(CLUSTER_WIDTH < interval && interval < MAX_INTERVAL)) {
                         continue;
                     }
@@ -620,28 +620,28 @@ void BPMDetector::updateStrings()
                     bool skipedBeat = false;
 
                     // Iterate over all future indices
-                    for (int k = j+msToFrames(minInterval); k < FRAMES_TO_CACHE; ++k) {
+                    for (int k = j+msToFrames(static_cast<int>(minInterval)); k < FRAMES_TO_CACHE; ++k) {
                         // Calculate the interval from the last onset
-                        float interval = framesToMs(k-lastOnsetIndex);
+                        float currentInterval = static_cast<float>(framesToMs(k-lastOnsetIndex));
 
                         // If the interval became to long, simulate a beat to allow one missing one
                         // or break if this has already been the done
-                        if (interval > maxInterval) {
+                        if (currentInterval > maxInterval) {
                             if (skipedBeat) {
                                 break;
                             } else {
-                                lastOnsetIndex += msToFrames(string.getAverageInterval());
+                                lastOnsetIndex += msToFrames(static_cast<int>(string.getAverageInterval()));
                                 // Skip ahead the minimal distance two onsets may be apart
                                 skipedBeat = true;
-                                k+= qMax(msToFrames(minInterval - CLUSTER_WIDTH) - 1, 0);
+                                k+= qMax(msToFrames(static_cast<int>(minInterval - CLUSTER_WIDTH)) - 1, 0);
                                 continue;
                             }
                         }
                         // If an onset was found, update the string and set it as the last onset
                         if (m_onsetBuffer[k]) {
                             // The score is the minimum of the two onsets spectral fluxes
-                            float score = qMin(m_spectralFluxNormalized[lastOnsetIndex], m_spectralFluxNormalized[k]);
-                            string.addInterval(interval, score);
+                            float currentScore = qMin(m_spectralFluxNormalized[lastOnsetIndex], m_spectralFluxNormalized[k]);
+                            string.addInterval(currentInterval, currentScore);
                             lastOnsetIndex = k;
 
                             // Recalculate the margin of tolerance from the new interval
@@ -649,7 +649,7 @@ void BPMDetector::updateStrings()
                             maxInterval = string.getAverageInterval() + CLUSTER_WIDTH;
 
                             // Skip ahead the minimal distance two onsets may be apart
-                            k += qMax(msToFrames(minInterval) - 1, 0);
+                            k += qMax(msToFrames(static_cast<int>(minInterval)) - 1, 0);
                         }
                     }
 
@@ -690,11 +690,11 @@ void BPMDetector::updateStrings()
 // to evaluate if after a drastic tempo change the old tempo is still plausible
 // This is the case if there is an string within CLUSTER_WIDTH of the interval
 // that has at least 40% the score of the other interval
-BeatString* BPMDetector::plausibleStringForInterval(float interval, float maxScore)
+    BeatString* BPMDetector::plausibleStringForInterval(float interval, float maxScore)
 {
     for (BeatString& string : m_beatStrings) {
         if (qAbs(string.getAverageInterval() - interval) < CLUSTER_WIDTH) {
-            if (string.getScore() >= 0.40 * maxScore) {
+            if (string.getScore() >= 0.40f * maxScore) {
                 return &string;
             }
         }
@@ -705,13 +705,13 @@ BeatString* BPMDetector::plausibleStringForInterval(float interval, float maxSco
 
 // The
 static const float fractionsToCheck[] = {
-    2.0,
-    0.5,
-    0.25,
-    4.0,
-    4.0/3.0,
-    2.0/3.0,
-    3.0};
+    2.0f,
+    0.5f,
+    0.25f,
+    4.0f,
+    4.0f/3.0f,
+    2.0f/3.0f,
+    3.0f};
 
 
 
@@ -759,7 +759,7 @@ void BPMDetector::evaluateStrings()
             IntervalCluster* closestCluster = nullptr;
             int closestDistance = INT_MAX;
             for (IntervalCluster& cluster : finalIntervalClusters) {
-                int distance = qAbs(cluster.getAverageInterval() - interval);
+                int distance = static_cast<int>(qAbs(cluster.getAverageInterval() - interval));
                 if (distance < CLUSTER_WIDTH && distance < closestDistance) {
                     closestDistance = distance;
                     closestCluster = &cluster;

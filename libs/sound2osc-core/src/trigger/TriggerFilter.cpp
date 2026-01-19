@@ -55,7 +55,7 @@ void TriggerFilter::triggerOn()
 	if (m_onDelayTimer.isActive()) return;
 
 	// call onOnDelayEnd() after onDelay time:
-	m_onDelayTimer.start(m_onDelay * 1000);
+	m_onDelayTimer.start(static_cast<int>(m_onDelay * 1000));
 }
 
 void TriggerFilter::triggerOff()
@@ -70,7 +70,7 @@ void TriggerFilter::triggerOff()
 	if (m_offDelayTimer.isActive()) return;
 
 	// call onOffDelayEnd() after offDelay time:
-	m_offDelayTimer.start(m_offDelay * 1000);
+	m_offDelayTimer.start(static_cast<int>(m_offDelay * 1000));
 }
 
 void TriggerFilter::sendOnSignal()
@@ -110,7 +110,7 @@ void TriggerFilter::onOnDelayEnd()
 
 	// if maxHold is set, call onMaxHoldEnd after maxHold time:
 	if (m_maxHold > 0) {
-		m_maxHoldTimer.start(m_maxHold * 1000);
+		m_maxHoldTimer.start(static_cast<int>(m_maxHold * 1000));
 	}
 }
 

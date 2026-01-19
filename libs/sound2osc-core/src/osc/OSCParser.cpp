@@ -285,7 +285,7 @@ char* OSCStream::CreateFrame_Mode_1_0(const char *buf, size_t &size)
 		char *frame = new char[size];
 		memcpy(frame, &packetSizeHeader, sizeof(packetSizeHeader));
 		OSCArgument::Swap32(frame);
-		memcpy(&frame[sizeof(packetSizeHeader)], buf, packetSizeHeader);
+		memcpy(&frame[sizeof(packetSizeHeader)], buf, static_cast<size_t>(packetSizeHeader));
 		return frame;
 	}
 
@@ -438,7 +438,7 @@ bool OSCArgument::Init(EnumArgumentTypes type, char *buf, size_t size)
 
 					if(p <= ++bufEnd)
 					{
-						m_Size = (p - buf);
+						m_Size = static_cast<size_t>(p - buf);
 						return true;
 					}
 				}
@@ -581,7 +581,7 @@ bool OSCArgument::GetInt(int &n) const
 	{
 		case OSC_TYPE_CHAR:
 		case OSC_TYPE_INT32:
-			n = static_cast<int>( GetInt32FromBuf(m_pBuf) );
+			n = GetInt32FromBuf(m_pBuf);
 			return true;
 
 		case OSC_TYPE_INT64:
@@ -641,7 +641,7 @@ bool OSCArgument::GetUInt(unsigned int &n) const
 	{
 		case OSC_TYPE_CHAR:
 		case OSC_TYPE_INT32:
-			n = static_cast<unsigned int>( GetUInt32FromBuf(m_pBuf) );
+			n = GetUInt32FromBuf(m_pBuf);
 			return true;
 
 		case OSC_TYPE_INT64:
@@ -855,7 +855,7 @@ bool OSCArgument::GetString(std::string &str) const
 				if( GetFloat(f) )
 				{
 					char buf[33];
-					snprintf(buf, sizeof(buf), "%.3f", f);
+					snprintf(buf, sizeof(buf), "%.3f", static_cast<double>(f));
 					str = buf;
 					return true;
 				}
@@ -1011,7 +1011,7 @@ OSCArgument* OSCArgument::GetArgs(char *buf, size_t size, size_t &count)
 					if(argType == OSCArgument::OSC_TYPE_INVALID)
 						break;	// unhandled argument type
 
-					size_t binaryDataSize = (binaryData ? (bufEnd-binaryData+1) : 0);
+					size_t binaryDataSize = (binaryData ? static_cast<size_t>(bufEnd-binaryData+1) : 0);
 					if( !args[count].Init(argType,binaryData,binaryDataSize) )
 						break;	// unhandled argument
 
@@ -1085,7 +1085,7 @@ char OSCArgument::GetCharFromArgumentType(EnumArgumentTypes type)
 
 char* OSCArgument::Get32BitAligned(char *start, char *p)
 {
-	size_t m = ((p-start) % 4);
+	size_t m = (static_cast<size_t>(p-start) % 4);
 	return ((m==0) ? p : (p+4-m));
 }
 
@@ -1889,7 +1889,7 @@ OSCPacketWriter* OSCPacketWriter::CreatePacketWriterForString(const char *str)
 		if( args )
 		{
 			// create packet with path
-			OSCPacketWriter *packet = new OSCPacketWriter( std::string(str,args-str) );
+			OSCPacketWriter *packet = new OSCPacketWriter( std::string(str, static_cast<std::string::size_type>(args-str)) );
 
 			// append comma delimited args
 			for(const char *i=++args; ;)
@@ -1911,7 +1911,7 @@ OSCPacketWriter* OSCPacketWriter::CreatePacketWriterForString(const char *str)
 				}
 				else if(*i == ',')
 				{
-					size_t len = (i - args);
+					size_t len = static_cast<size_t>(i - args);
 					if(len != 0)
 					{
 						char *copy = new char[len + 1];
@@ -2338,14 +2338,14 @@ bool OSCMethod::ProcessPacket(OSCParserClient &client, char *buf, size_t size)
 					// yup, do we have a handler
 					METHOD_TABLE::const_iterator i = m_MethodTable.find(name);
 					if(i != m_MethodTable.end())
-						return i->second->ProcessPacket(client, nextBuf, size-(nextBuf-buf));
+						return i->second->ProcessPacket(client, nextBuf, size-static_cast<size_t>(nextBuf-buf));
 
 					if(!last && nextBuf!=buf)
 					{
 						if( !ExecuteMethod(client,/*last*/false,buf,size) )
 							return false;
 
-						return ProcessPacket(client, nextBuf, size-(nextBuf-buf));
+						return ProcessPacket(client, nextBuf, size-static_cast<size_t>(nextBuf-buf));
 					}
 				}
 			}

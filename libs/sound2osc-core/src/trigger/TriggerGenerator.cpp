@@ -107,9 +107,9 @@ void TriggerGenerator::save(QSettings& settings) const
 
 void TriggerGenerator::restore(QSettings& settings)
 {
-    m_mute = settings.value(m_name + "/mute", false).toBool();
+	m_mute = settings.value(m_name + "/mute", false).toBool();
 	setThreshold(settings.value(m_name + "/threshold").toReal());
-	setMidFreq(settings.value(m_name + "/midFreq").toReal());
+	setMidFreq(settings.value(m_name + "/midFreq").toInt());
 	setWidth(settings.value(m_name + "/width").toReal());
 	m_filter.restore(m_name, settings);
     m_oscParameters.restore(m_name, settings);

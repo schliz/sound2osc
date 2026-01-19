@@ -57,7 +57,7 @@ void OSCMapping::handleMessage(OSCMessage msg)
 		// load preset if first argument is a string:
 		if (msg.arguments().size() == 1) {
 			QVariant arg = msg.arguments().first();
-			if (arg.type() == QVariant::String) {
+			if (arg.typeId() == QMetaType::QString) {
 				QString presetDir = m_controller->getPresetDirectory() + "/";
 				m_controller->loadPreset(presetDir + arg.toString() + ".s2l");
 			}

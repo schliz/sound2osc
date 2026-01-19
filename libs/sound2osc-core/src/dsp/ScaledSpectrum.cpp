@@ -52,7 +52,7 @@ ScaledSpectrum::ScaledSpectrum(const int &baseFreq, const int &scaledLength)
 
 void ScaledSpectrum::updateWithLinearSpectrum(const QVector<float> linearSpectrum)
 {
-    const int linearLength = linearSpectrum.size();
+    const int linearLength = static_cast<int>(linearSpectrum.size());
 	double freq = m_baseFreq;
 	float maxValue = 0;
 
@@ -62,15 +62,15 @@ void ScaledSpectrum::updateWithLinearSpectrum(const QVector<float> linearSpectru
     for (int i = 0; i<m_scaledLength; ++i) {
         // calculate begin and end frequency of this step:
         double nextFreq = m_baseFreq * qPow(m_freqScaleFactor, i+1);
-        const std::size_t startIndex = freq / 22050 * (linearLength);
-        const std::size_t endIndex = nextFreq / 22050 * (linearLength);
+        const std::size_t startIndex = static_cast<std::size_t>(freq / 22050 * (linearLength));
+        const std::size_t endIndex = static_cast<std::size_t>(nextFreq / 22050 * (linearLength));
         const std::size_t valuesTillNext = endIndex - startIndex;
         freq = nextFreq;
 
         // Sum up the energies of all FFT elements betwen the two frequencies:
-        float energy = linearSpectrum[startIndex];
+        float energy = linearSpectrum[static_cast<int>(startIndex)];
         for (std::size_t j=1; j < valuesTillNext; ++j) {
-            energy += linearSpectrum[startIndex+j];
+            energy += linearSpectrum[static_cast<int>(startIndex+j)];
         }
 
         // Maximum of FFT is sqrt(NUM_SAMPLES)
@@ -81,8 +81,8 @@ void ScaledSpectrum::updateWithLinearSpectrum(const QVector<float> linearSpectru
 
         if (m_convertToDecibel) {
             // Convert energy to dB:
-			float dB = 20 * qLn(energy / maxPossibleEnergy) / qLn(10);
-			float valueBeforeGain = (dB + 60) / 60;
+			float dB = 20.0f * static_cast<float>(qLn(static_cast<double>(energy) / static_cast<double>(maxPossibleEnergy)) / qLn(10.0));
+			float valueBeforeGain = (dB + 60.0f) / 60.0f;
 			maxValue = qMax(maxValue, valueBeforeGain);
 
             // Scale the value with factor and exponent:
@@ -105,7 +105,7 @@ void ScaledSpectrum::updateWithLinearSpectrum(const QVector<float> linearSpectru
 int ScaledSpectrum::getIndexForFreq(const int &freq) const
 {
     // convert a frequency back to the index in the logarithmic array:
-	return qMax(0.0, qMin(qLn(qreal(freq) / m_baseFreq) / m_logOfFreqScaleFactor, m_scaledLength - 1.0));
+	return static_cast<int>(qMax(0.0, qMin(qLn(qreal(freq) / m_baseFreq) / m_logOfFreqScaleFactor, m_scaledLength - 1.0)));
 }
 
 double ScaledSpectrum::getFreqAtPosition(const double &value) const

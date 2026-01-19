@@ -22,6 +22,12 @@
 #define FFTREALWRAPPER_H
 
 #include <sound2osc/dsp/BasicFFTInterface.h>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
 #include <ffft/FFTRealFixLen.h>
 
 // An Implementation of the BasicFFTInterface with FFTReal
@@ -40,5 +46,7 @@ public:
 protected:
 	ffft::FFTRealFixLen<LENGTH_EXPONENT> m_fftreal;
 };
+
+#pragma GCC diagnostic pop
 
 #endif // FFTREALWRAPPER_H

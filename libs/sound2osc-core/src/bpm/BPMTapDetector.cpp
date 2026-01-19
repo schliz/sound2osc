@@ -32,10 +32,10 @@ BPMTapDetector::BPMTapDetector(BPMOscControler *osc) :
 
 inline float bpmInRange(float bpm, const int minBPM) {
     if (minBPM > 0) {
-        while (bpm < minBPM && bpm != 0) {
+        while (bpm < static_cast<float>(minBPM) && bpm != 0) {
             bpm *= 2;
         }
-        while (bpm >= minBPM*2) {
+        while (bpm >= static_cast<float>(minBPM*2)) {
             bpm /= 2;
         }
     }
@@ -86,8 +86,8 @@ void BPMTapDetector::triggerBeat() {
         sumBeatDuration += m_lastBeats[i] - m_lastBeats[i-1];
     }
     // averageBeatDuration is in sec
-    float averageBeatDuration = sumBeatDuration / (m_lastBeats.size() - 1);
-    m_bpm = bpmInRange((1. / averageBeatDuration) * 60., m_minBPM);
+    float averageBeatDuration = static_cast<float>(sumBeatDuration) / static_cast<float>(m_lastBeats.size() - 1);
+    m_bpm = bpmInRange((1.0f / averageBeatDuration) * 60.0f, m_minBPM);
     m_oscController->transmitBPM(m_bpm);
 }
 

@@ -129,7 +129,7 @@ void QAudioInputWrapper::setInputByName(const QString &inputName)
 qreal QAudioInputWrapper::getVolume() const
 {
     if (!m_audioSource) return 0.0;
-    return static_cast<qreal>(m_audioSource->volume());
+    return m_audioSource->volume();
 }
 
 void QAudioInputWrapper::setVolume(const qreal &value)

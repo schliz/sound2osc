@@ -108,7 +108,7 @@ protected:
 	}
 
 	void *allocate(int count, size_t sizeOfT)
-	{ return operator new[](count * sizeOfT); }
+	{ return operator new[](static_cast<size_t>(count) * sizeOfT); }
 	void deallocate(void *p)
 	{ operator delete[](p); }
 
@@ -664,7 +664,7 @@ QCircularBuffer<T>::QCircularBuffer(int amount)
 	d->capacity = amount;
 
 	// Initialize memory block to zero
-	memset(d->data(), 0, amount * sizeof(T));
+	memset(static_cast<void*>(d->data()), 0, static_cast<size_t>(amount) * sizeof(T));
 }
 
 template <typename T>

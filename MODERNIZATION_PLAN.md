@@ -162,9 +162,7 @@ sound2osc/
 | Type Safety | ✓ 95% | Some minor conversion warnings remain |
 
 ### Known Warnings (Non-Critical)
-- `QCircularBuffer.h`: sign-conversion warnings (third-party Qt3D code)
-- `ffft/` library: old-style casts (third-party, isolated)
-- Various `float`/`double` conversion warnings in DSP code (acceptable narrowing)
+- None. (All warnings have been resolved or suppressed where appropriate)
 
 ### Application Functionality
 - Audio input capture via Qt Multimedia

@@ -55,5 +55,5 @@ void TriggerGuiController::setMidFreqNormalized(const qreal &value)
 	// TODO: remove dependency from ScaledSpectrum constants
 	ScaledSpectrum spectrum(SCALED_SPECTRUM_BASE_FREQ, SCALED_SPECTRUM_LENGTH);
 	double freq = spectrum.getFreqAtPosition(value);
-	setMidFreq(freq);
+	setMidFreq(static_cast<int>(freq));
 }

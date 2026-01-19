@@ -34,7 +34,7 @@ class TriggerGuiController : public QObject
 
 	// these properties are used by GUI:
 	Q_PROPERTY(bool active READ getActive NOTIFY activeChanged)
-	Q_PROPERTY(qreal midFreq READ getMidFreq WRITE setMidFreq NOTIFY parameterChanged)
+	Q_PROPERTY(int midFreq READ getMidFreq WRITE setMidFreq NOTIFY parameterChanged)
 	Q_PROPERTY(qreal width READ getWidth WRITE setWidth NOTIFY parameterChanged)
 	Q_PROPERTY(qreal threshold READ getThreshold WRITE setThreshold NOTIFY parameterChanged)
 	Q_PROPERTY(qreal onDelay READ getOnDelay NOTIFY parameterChanged)

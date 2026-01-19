@@ -215,7 +215,7 @@ void MainController::initAudioInput()
 
 	// start FFT update timer:
 	connect(&m_fftUpdateTimer, &QTimer::timeout, this, &MainController::updateFFT);
-	m_fftUpdateTimer.start(1000.0 / FFT_UPDATE_RATE);
+	m_fftUpdateTimer.start(static_cast<int>(1000.0 / FFT_UPDATE_RATE));
 
     // set up the BPM timer and start it
     connect(&m_bpmUpdatetimer, &QTimer::timeout, this, &MainController::updateBPM);
@@ -420,9 +420,9 @@ void MainController::loadPresetIndependentSettings()
 
 	// restore preset independent settings:
 	setOscIpAddress(independentSettings.value("oscIpAddress").toString());
-	setOscUdpTxPort(independentSettings.value("oscTxPort").toInt());
-	setOscUdpRxPort(independentSettings.value("oscRxPort", 8000).toInt());
-	setOscTcpPort(independentSettings.value("oscTcpPort", 3032).toInt());
+	setOscUdpTxPort(static_cast<quint16>(independentSettings.value("oscTxPort").toInt()));
+	setOscUdpRxPort(static_cast<quint16>(independentSettings.value("oscRxPort", 8000).toInt()));
+	setOscTcpPort(static_cast<quint16>(independentSettings.value("oscTcpPort", 3032).toInt()));
 	setOscEnabled(independentSettings.value("oscIsEnabled").toBool());
 	setUseTcp(independentSettings.value("oscUseTcp").toBool());
 	setUseOsc_1_1(independentSettings.value("oscUse_1_1").toBool());
@@ -500,7 +500,7 @@ void MainController::loadPreset(const QString &constFileName, bool createIfNotEx
     m_bpmOSC.restore(settings);
 
     // Restore the manual BPM
-    m_bpmTap.setBpm(settings.value("bpm/tapvalue", 60).toInt());
+    m_bpmTap.setBpm(static_cast<float>(settings.value("bpm/tapvalue", 60).toInt()));
 
     m_bpmOSC.setBPMMute(settings.value("bpm/mute", false).toBool());
 
@@ -793,7 +793,7 @@ void MainController::enableOscLevelFeedback(bool value)
 {
 	if (value) {
 		// start OSC level feedback timer:
-		m_oscUpdateTimer.start(1000.0 / OSC_LEVEL_FEEDBACK_RATE);
+		m_oscUpdateTimer.start(static_cast<int>(1000.0 / OSC_LEVEL_FEEDBACK_RATE));
 	} else {
 		// stop OSC level feedback timer:
 		m_oscUpdateTimer.stop();
