@@ -32,6 +32,9 @@ set(CORE_SOURCES
     src/config/JsonConfigStore.cpp
     src/config/PresetManager.cpp
     src/config/SettingsManager.cpp
+
+    # Core module
+    src/core/AppInfo.cpp
 )
 
 set(CORE_HEADERS
@@ -66,6 +69,7 @@ set(CORE_HEADERS
     include/sound2osc/core/QCircularBuffer.h
     include/sound2osc/core/utils.h
     include/sound2osc/core/versionInfo.h
+    include/sound2osc/core/AppInfo.h
 
     # Logging module
     include/sound2osc/logging/Logger.h

@@ -19,6 +19,12 @@
 // THE SOFTWARE.
 
 #include "controllers/MainController.h"
+#include "utils/SettingsMigration.h"
+
+#include <sound2osc/core/AppInfo.h>
+#include <sound2osc/config/SettingsManager.h>
+#include <sound2osc/config/PresetManager.h>
+#include <sound2osc/logging/Logger.h>
 
 #include <QApplication>
 #include <QQmlApplicationEngine>
@@ -27,17 +33,41 @@
 #include <QSettings>
 #include <QScreen>
 #include <QSplashScreen>
+#include <QStandardPaths>
 
 
 int main(int argc, char *argv[]) {
+    using namespace sound2osc;
+    
     // Qt6: High DPI scaling is enabled by default, AA_EnableHighDpiScaling is deprecated
     QApplication app(argc, argv);
 	app.setWindowIcon(QIcon(":/images/icons/etcicon.ico"));
 
-	// these parameters are used by QSettings:
-	QCoreApplication::setOrganizationName("ETC");
-	QCoreApplication::setApplicationName("Sound2Light");
+	// Configure application identity using AppInfo
+	// This allows easy rebranding for forks while maintaining backward compatibility
+	QCoreApplication::setOrganizationName(AppInfo::organizationName());
+	QCoreApplication::setApplicationName(AppInfo::applicationName());
+	QCoreApplication::setApplicationVersion(AppInfo::applicationVersion());
 	QSettings::setDefaultFormat(QSettings::IniFormat);
+
+	// Initialize logging
+	Logger::info(QString("Starting %1 v%2")
+	    .arg(AppInfo::applicationDisplayName())
+	    .arg(AppInfo::applicationVersion()));
+
+	// ----------- Settings Migration --------
+	// Check for legacy QSettings and migrate to new JSON format if needed
+	QString presetDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+	auto settingsManager = std::make_shared<SettingsManager>();
+	auto presetManager = std::make_unique<PresetManager>(presetDir);
+	
+	if (SettingsMigration::hasLegacySettings()) {
+	    Logger::info("Legacy settings detected, starting migration...");
+	    SettingsMigration::migrate(settingsManager.get(), presetManager.get());
+	}
+	
+	// Load settings (either migrated or existing)
+	settingsManager->load();
 
 	// ----------- Show Splash Screen --------
 	QPixmap pixmap(":/images/icons/etclogo.png");
@@ -51,10 +81,14 @@ int main(int argc, char *argv[]) {
 
 	// create QmlEngine and MainController:
 	QQmlApplicationEngine engine;
-    MainController* controller = new MainController(&engine);
+    MainController* controller = new MainController(&engine, settingsManager, presetManager.get());
 
 	// set global QML variable "controller" to a pointer to the MainController:
     engine.rootContext()->setContextProperty("controller", controller);
+    
+    // Expose AppInfo to QML for branding
+    engine.rootContext()->setContextProperty("appVersion", AppInfo::applicationVersion());
+    engine.rootContext()->setContextProperty("appName", AppInfo::applicationDisplayName());
 
 	// quit QGuiApplication when quit signal is emitted:
 	QObject::connect(&engine, &QQmlApplicationEngine::quit, &app, &QCoreApplication::quit);
@@ -67,6 +101,8 @@ int main(int argc, char *argv[]) {
 
 	// ---------- Hide Splash Screen ---------
 	splash.hide();
+	
+	Logger::info("Application initialized successfully");
 
 	// start main application loop:
 	return app.exec();

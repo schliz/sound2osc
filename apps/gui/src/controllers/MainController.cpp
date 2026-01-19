@@ -22,6 +22,9 @@
 
 #include <sound2osc/audio/QAudioInputWrapper.h>
 #include <sound2osc/trigger/TriggerGenerator.h>
+#include <sound2osc/config/SettingsManager.h>
+#include <sound2osc/config/PresetManager.h>
+#include <sound2osc/logging/Logger.h>
 #include "TriggerGuiController.h"
 #include <sound2osc/osc/OSCNetworkManager.h>
 
@@ -35,10 +38,16 @@
 #include <QScreen>
 #include <QFileDialog>
 
+using namespace sound2osc;
 
-MainController::MainController(QQmlApplicationEngine* qmlEngine, QObject *parent)
+MainController::MainController(QQmlApplicationEngine* qmlEngine,
+                               std::shared_ptr<SettingsManager> settingsManager,
+                               PresetManager* presetManager,
+                               QObject *parent)
 	: QObject(parent)
 	, m_qmlEngine(qmlEngine)
+	, m_settingsManager(settingsManager)
+	, m_presetManager(presetManager)
     , m_buffer(NUM_SAMPLES*4) // more buffer so the bpm detector can get overlaping data
     , m_audioInput(nullptr)
 	, m_fft(m_buffer, m_triggerContainer)
@@ -168,17 +177,18 @@ QQuickWindow *MainController::getMainWindow() const
 	return window;
 }
 
-bool MainController::settingsFormatIsValid(QSettings &settings) const
+bool MainController::settingsFormatIsValid(const QString& filePath) const
 {
-	// check format version:
+	// check format version from a preset file:
+	QSettings settings(filePath, QSettings::IniFormat);
 	int formatVersion = settings.value("formatVersion").toInt();
 	if (formatVersion == 0) {
 		// this is the first start of the software, nothing to restore
-		qDebug() << "this is the first start of the software, nothing to restore";
+		Logger::debug("this is the first start of the software, nothing to restore");
 		return false;
 	} else if (formatVersion < SETTINGS_FORMAT_VERSION) {
 		// the format of the settings is too old, cannot restore
-		qDebug() << "the format of the settings is too old, cannot restore";
+		Logger::debug("the format of the settings is too old, cannot restore");
 		return false;
 	}
 	return true;
@@ -195,10 +205,9 @@ void MainController::onConnectedChanged()
 void MainController::initAudioInput()
 {
 	QString inputDeviceName;
-	// get input device name from settings:
-	QSettings settings;
-	if (settingsFormatIsValid(settings)) {
-		inputDeviceName = settings.value("inputDeviceName").toString();
+	// get input device name from settings manager:
+	if (m_settingsManager && m_settingsManager->isValid()) {
+		inputDeviceName = m_settingsManager->inputDeviceName();
 	}
 	// if it is empty, set it to default input:
 	if (inputDeviceName.isEmpty()) {
@@ -381,71 +390,82 @@ void MainController::onVisibilityChanged()
 
 void MainController::savePresetIndependentSettings() const
 {
-	QSettings independentSettings;
-	// save preset independent settings:
-	independentSettings.setValue("version", VERSION_STRING);
-	independentSettings.setValue("formatVersion", SETTINGS_FORMAT_VERSION);
-	independentSettings.setValue("changedAt", QDateTime::currentDateTime().toString());
-	independentSettings.setValue("oscIpAddress", getOscIpAddress());
-	independentSettings.setValue("oscTxPort", getOscUdpTxPort());
-	independentSettings.setValue("oscRxPort", getOscUdpRxPort());
-	independentSettings.setValue("oscTcpPort", getOscTcpPort());
-	independentSettings.setValue("oscIsEnabled", getOscEnabled());
-	independentSettings.setValue("oscUseTcp", getUseTcp());
-	independentSettings.setValue("oscUse_1_1", getUseOsc_1_1());
-    QRect windowGeometry = getMainWindow()->geometry();
-    if (windowGeometry.width() < 300) {
-        // -> minimal mode, save default geometry
-        windowGeometry.setWidth(1200);
-        windowGeometry.setHeight(800);
-    }
-    independentSettings.setValue("windowGeometry", windowGeometry);
+	// Use SettingsManager for saving settings
+	if (!m_settingsManager) {
+		Logger::warning("SettingsManager not available, cannot save settings");
+		return;
+	}
+	
+	// Save OSC settings
+	m_settingsManager->setOscIpAddress(getOscIpAddress());
+	m_settingsManager->setOscUdpTxPort(getOscUdpTxPort());
+	m_settingsManager->setOscUdpRxPort(getOscUdpRxPort());
+	m_settingsManager->setOscTcpPort(getOscTcpPort());
+	m_settingsManager->setOscEnabled(getOscEnabled());
+	m_settingsManager->setUseTcp(getUseTcp());
+	m_settingsManager->setUseOsc_1_1(getUseOsc_1_1());
+	m_settingsManager->setOscLogIncomingEnabled(getOscLogIncomingIsEnabled());
+	m_settingsManager->setOscLogOutgoingEnabled(getOscLogOutgoingIsEnabled());
+	m_settingsManager->setOscInputEnabled(getOscInputEnabled());
+	
+	// Save window geometry
+	QRect windowGeometry = getMainWindow()->geometry();
+	if (windowGeometry.width() < 300) {
+		// -> minimal mode, save default geometry
+		windowGeometry.setWidth(1200);
+		windowGeometry.setHeight(800);
+	}
+	m_settingsManager->setWindowGeometry(windowGeometry);
 	bool maximized = (getMainWindow()->width() == QGuiApplication::primaryScreen()->availableSize().width());
-	independentSettings.setValue("maximized", maximized);
-	independentSettings.setValue("inputDeviceName", getActiveInputName());
-	independentSettings.setValue("presetFileName", m_currentPresetFilename);
-	independentSettings.setValue("presetChangedButNotSaved", m_presetChangedButNotSaved);
-	independentSettings.setValue("oscLogSettingsValid", true);
-	independentSettings.setValue("oscLogIncomingIsEnabled", getOscLogIncomingIsEnabled());
-	independentSettings.setValue("oscLogOutgoingIsEnabled", getOscLogOutgoingIsEnabled());
-	independentSettings.setValue("oscInputEnabledValid", true);
-	independentSettings.setValue("oscInputEnabled", getOscInputEnabled());
+	m_settingsManager->setWindowMaximized(maximized);
+	
+	// Save input device
+	m_settingsManager->setInputDeviceName(getActiveInputName());
+	
+	// Sync to storage
+	m_settingsManager->save();
 }
 
 void MainController::loadPresetIndependentSettings()
 {
-	QSettings independentSettings;
-	// do not restore anything if the format is not valid (or the file is new):
-	if (!settingsFormatIsValid(independentSettings)) return;
+	// Use SettingsManager if available
+	if (!m_settingsManager) {
+		Logger::warning("SettingsManager not available, skipping settings load");
+		return;
+	}
+	
+	if (!m_settingsManager->isValid()) {
+		Logger::debug("No valid settings found, using defaults");
+		return;
+	}
 
-	// restore preset independent settings:
-	setOscIpAddress(independentSettings.value("oscIpAddress").toString());
-	setOscUdpTxPort(static_cast<quint16>(independentSettings.value("oscTxPort").toInt()));
-	setOscUdpRxPort(static_cast<quint16>(independentSettings.value("oscRxPort", 8000).toInt()));
-	setOscTcpPort(static_cast<quint16>(independentSettings.value("oscTcpPort", 3032).toInt()));
-	setOscEnabled(independentSettings.value("oscIsEnabled").toBool());
-	setUseTcp(independentSettings.value("oscUseTcp").toBool());
-	setUseOsc_1_1(independentSettings.value("oscUse_1_1").toBool());
-	if (independentSettings.value("oscLogSettingsValid").toBool()) {
-		enableOscLogging(independentSettings.value("oscLogIncomingIsEnabled").toBool(), independentSettings.value("oscLogOutgoingIsEnabled").toBool());
-	} else {
-		enableOscLogging(true, true);
-	}
-	if (independentSettings.value("oscInputEnabledValid").toBool()) {
-		setOscInputEnabled(independentSettings.value("oscInputEnabled").toBool());
-	} else {
-		setOscInputEnabled(true);
-	}
+	// restore preset independent settings from SettingsManager:
+	setOscIpAddress(m_settingsManager->oscIpAddress());
+	setOscUdpTxPort(m_settingsManager->oscUdpTxPort());
+	setOscUdpRxPort(m_settingsManager->oscUdpRxPort());
+	setOscTcpPort(m_settingsManager->oscTcpPort());
+	setOscEnabled(m_settingsManager->oscEnabled());
+	setUseTcp(m_settingsManager->useTcp());
+	setUseOsc_1_1(m_settingsManager->useOsc_1_1());
+	enableOscLogging(m_settingsManager->oscLogIncomingEnabled(), 
+	                 m_settingsManager->oscLogOutgoingEnabled());
+	setOscInputEnabled(m_settingsManager->oscInputEnabled());
 }
 
 void MainController::restoreWindowGeometry()
 {
-	QSettings independentSettings;
-	// do not restore anything if the format is not valid (or the file is new):
-	if (!settingsFormatIsValid(independentSettings)) return;
+	// Use SettingsManager for window geometry
+	if (!m_settingsManager || !m_settingsManager->isValid()) {
+		Logger::debug("No valid settings for window geometry");
+		QQuickWindow* window = getMainWindow();
+		if (window) {
+			connect(window, &QQuickWindow::closing, m_qmlEngine, &QQmlApplicationEngine::quit);
+		}
+		return;
+	}
 
-	QRect windowGeometry = independentSettings.value("windowGeometry").toRect();
-	bool maximized = independentSettings.value("maximized").toBool();
+	QRect windowGeometry = m_settingsManager->windowGeometry();
+	bool maximized = m_settingsManager->windowMaximized();
 	QQuickWindow* window = getMainWindow();
 	if (!window) return;
 	if (!windowGeometry.isNull()) window->setGeometry(windowGeometry);
@@ -475,7 +495,7 @@ void MainController::loadPreset(const QString &constFileName, bool createIfNotEx
 	// loads the file or creates it if not existent:
 	QSettings settings(fileName, QSettings::IniFormat);
 	// do not restore anything if the format is not valid (or the file is new):
-	if (!settingsFormatIsValid(settings)) return;
+	if (!settingsFormatIsValid(fileName)) return;
 
 	// restore all general, not independent settings from the preset file:
 	setDecibelConversion(settings.value("dbConversion").toBool());

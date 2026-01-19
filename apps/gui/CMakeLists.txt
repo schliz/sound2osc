@@ -6,12 +6,14 @@ set(GUI_SOURCES
     src/controllers/MainController.cpp
     src/controllers/TriggerGuiController.cpp
     src/osc/OSCMapping.cpp
+    src/utils/SettingsMigration.cpp
 )
 
 set(GUI_HEADERS
     src/controllers/MainController.h
     src/controllers/TriggerGuiController.h
     src/osc/OSCMapping.h
+    src/utils/SettingsMigration.h
 )
 
 set(GUI_RESOURCES
@@ -31,6 +33,7 @@ target_include_directories(sound2osc PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/controllers
     ${CMAKE_CURRENT_SOURCE_DIR}/src/osc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
 )
 
 # Link against core library and Qt6
