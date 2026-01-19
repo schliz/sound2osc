@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: linux-debian
+          - os: ubuntu-latest
             container: debian:trixie
             install_cmd: apt-get update && apt-get install -y git build-essential cmake ninja-build qt6-base-dev qt6-multimedia-dev qt6-declarative-dev libgl1-mesa-dev qml6-module-qtquick-layouts qml6-module-qtquick-controls qml6-module-qtquick-dialogs qml6-module-qtquick-window qml6-module-qtmultimedia
           - os: windows-latest
@@ -54,7 +54,7 @@ jobs:
       run: cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DSOUND2OSC_BUILD_HEADLESS=ON -DSOUND2OSC_BUILD_TESTS=ON
 
     - name: Build
-      run: cmake --build build --verbose
+      run: cmake --build build --config Release --verbose
 
     - name: Test
-      run: ctest --test-dir build --output-on-failure
+      run: ctest --test-dir build --config Release --output-on-failure
