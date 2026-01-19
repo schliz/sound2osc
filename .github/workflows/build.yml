@@ -60,5 +60,10 @@ jobs:
     - name: Build
       run: cmake --build build --config Release --verbose
 
-    - name: Test
-      run: ctest --test-dir build --config Release --output-on-failure
+    - name: Test (Windows)
+      if: runner.os == 'Windows'
+      run: ctest --test-dir build --build-config Release --output-on-failure
+
+    - name: Test (Unix)
+      if: runner.os != 'Windows'
+      run: ctest --test-dir build --output-on-failure
