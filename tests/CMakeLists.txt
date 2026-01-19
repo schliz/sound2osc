@@ -14,3 +14,6 @@ endfunction()
 
 # Add Unit Tests
 add_sound2osc_test(TestOSCMessage unit/TestOSCMessage.cpp)
+add_sound2osc_test(TestLogger unit/TestLogger.cpp)
+add_sound2osc_test(TestConfigStore unit/TestConfigStore.cpp)
+add_sound2osc_test(TestAppInfo unit/TestAppInfo.cpp)
