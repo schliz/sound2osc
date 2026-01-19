@@ -326,16 +326,16 @@ The following items were originally in Phase 3 but are deferred as they are not 
 
 ### Phase 4: Cross-Platform & CI/CD
 
-**Status:** Not Started
+**Status:** In Progress (Started 2026-01-19)
 
-- [ ] Set up GitHub Actions workflow
+- [x] Set up GitHub Actions workflow
 - [ ] Test and fix Windows build
 - [ ] Test and fix macOS build
 - [ ] Create AppImage for Linux
 - [ ] Create DMG for macOS
 - [ ] Create Windows installer (NSIS or WiX)
 - [ ] Automated release pipeline
-- [ ] Add unit tests with CTest
+- [x] Add unit tests with CTest
 
 **Deliverables:**
 - Multi-platform CI/CD
