@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/schliz/sound2osc/compare/v1.0.1...v1.1.0) (2026-01-19)
+
+
+### Features
+
+* **build:** x-plattform builds and releases ([1b8e7e0](https://github.com/schliz/sound2osc/commit/1b8e7e0152feba65fc710b5042e72823576aef84))
+
 ## [1.0.1](https://github.com/schliz/sound2osc/compare/v1.0.0...v1.0.1) (2026-01-19)
 
 
