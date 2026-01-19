@@ -29,7 +29,8 @@ import "style"  // import all files in style dir
 Dialog {
 	id: root
 	title: "OSC Monitor"
-	modality: Qt.platform.os == "osx" ? Qt.NonModal : Qt.WindowModal
+	// Qt6: use 'modal' property instead of 'modality'
+	modal: Qt.platform.os !== "osx"
 
 	contentItem: Item {
 		implicitWidth: 700

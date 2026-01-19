@@ -27,7 +27,7 @@ MessageDialog {
 	text: "Could not find any input devices."
 
 	buttons: MessageDialog.Retry | MessageDialog.Close
-	modality: Qt.ApplicationModal
+	// Qt6: MessageDialog doesn't have modality property
 
 	onButtonClicked: function(button, role) {
 		if (button === MessageDialog.Retry) {

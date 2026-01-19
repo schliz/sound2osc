@@ -709,25 +709,62 @@ void MainController::sendOscTestMessage(QString message)
 
 void MainController::openDialog(const QString &qmlDialogFile, QString propertyName, QVariant propertyValue)
 {
+	qDebug() << "openDialog called for:" << qmlDialogFile;
+	
 	// check if dialog is already opened:
 	if (m_dialogs.find(qmlDialogFile) != m_dialogs.end()) {
 		// dialog is open
 		QObject* dialog = m_dialogs[qmlDialogFile];
 		if (dialog && dialog->property("visible").toBool()) {
+			qDebug() << "Dialog already open, toggling visibility";
 			dialog->setProperty("visible", false);
 			dialog->setProperty("visible", true);
 			return;
 		}
 	}
 	// create new dialog from QML file:
-	QQmlComponent* component = new QQmlComponent(m_qmlEngine, QUrl(qmlDialogFile));
+	// Use QQmlComponent::PreferSynchronous to ensure component is ready immediately
+	QQmlComponent* component = new QQmlComponent(m_qmlEngine, QUrl(qmlDialogFile), QQmlComponent::PreferSynchronous);
+	
+	// Check if component is ready before creating
+	if (!component->isReady()) {
+		qWarning() << "QQmlComponent: Component is not ready for" << qmlDialogFile;
+		if (component->isError()) {
+			qWarning() << "QQmlComponent errors:" << component->errors();
+		}
+		delete component;
+		return;
+	}
+	
+	qDebug() << "Component ready, creating dialog object";
 	QObject* dialog = component->beginCreate(m_qmlEngine->rootContext());
+	if (!dialog) {
+		qWarning() << "Failed to create dialog object for" << qmlDialogFile;
+		delete component;
+		return;
+	}
+	
+	qDebug() << "Dialog object created successfully";
+	
+	// Qt6: Set parent for Dialog/Popup to make it visible
+	// Dialog needs a parent window or contentItem to be displayed
+	QQuickWindow* mainWindow = getMainWindow();
+	if (mainWindow) {
+		qDebug() << "Setting dialog parent to main window";
+		// For QtQuick.Controls Dialog (which is a Popup), we need to set the parent
+		QQuickItem* contentItem = mainWindow->contentItem();
+		dialog->setParent(contentItem);
+		dialog->setProperty("parent", QVariant::fromValue(contentItem));
+	}
+	
 	if (!propertyName.isEmpty()) {
 		dialog->setProperty(propertyName.toLatin1(), propertyValue);
 	}
 	component->completeCreate();
+	qDebug() << "Calling open() on dialog";
 	QMetaObject::invokeMethod(dialog, "open");
 	m_dialogs[qmlDialogFile] = dialog;
+	qDebug() << "Dialog opened and stored";
 }
 
 void MainController::dialogIsClosed(QObject *dialog)

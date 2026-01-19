@@ -29,7 +29,8 @@ import "style"  // import all files in style dir
 Dialog {
 	id: root
 	title: "Settings"
-	modality: Qt.platform.os == "osx" ? Qt.NonModal : Qt.ApplicationModal
+	// Qt6: use 'modal' property instead of 'modality'
+	modal: Qt.platform.os !== "osx"
 
 	// update the input device list when the dialog becomes visible
 	// because it could have changed:

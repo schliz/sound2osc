@@ -30,7 +30,8 @@ import "style"  // import all files in style dir
 Dialog {
 	id: root
 	title: "Preset List"
-	modality: Qt.NonModal
+	// Qt6: use 'modal' property instead of 'modality'
+	modal: false
 
 	contentItem: Item {
 		implicitWidth: 200
@@ -109,7 +110,7 @@ Dialog {
 								title: "Unsaved Changes"
 								text: "Discard unsaved changes?"
 								buttons: MessageDialog.Cancel | MessageDialog.Discard | MessageDialog.Save
-								modality: Qt.ApplicationModal
+								// Qt6: MessageDialog doesn't have modality property
 								onButtonClicked: function(button, role) {
 									if (button === MessageDialog.Save) {
 										// Save Button:
@@ -152,7 +153,7 @@ Dialog {
 								title: "Delete Preset"
 								text: "Delete Preset '" + presetName + "'?"
 								buttons: MessageDialog.Cancel | MessageDialog.Yes
-								modality: Qt.ApplicationModal
+								// Qt6: MessageDialog doesn't have modality property
 								onButtonClicked: function(button, role) {
 									if (button === MessageDialog.Yes) {
 										controller.deletePreset(presetPath)
