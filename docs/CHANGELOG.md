@@ -1,3 +1,11 @@
+## [1.0.1](https://github.com/schliz/sound2osc/compare/v1.0.0...v1.0.1) (2026-01-19)
+
+
+### Bug Fixes
+
+* migrate dialog logic to qt6 ([53746b7](https://github.com/schliz/sound2osc/commit/53746b71f35fc0715c1b7c78bb0306e00d99766f))
+* sign-conversion and old-style cast warnings ([4a623c9](https://github.com/schliz/sound2osc/commit/4a623c9f6aee5ef0eddb2cf9ddb71bb79ff9bd5b))
+
 # 1.0.0 (2026-01-18)
 
 
