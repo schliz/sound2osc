@@ -1,6 +1,6 @@
-# Contributing to Sound2OSC
+# Contributing to sound2osc
 
-Thank you for your interest in contributing to Sound2OSC! This guide explains the architecture, design principles, and workflow for extending the codebase.
+Thank you for your interest in contributing to sound2osc! This guide explains the architecture, design principles, and workflow for extending the codebase.
 
 ---
 
@@ -8,7 +8,7 @@ Thank you for your interest in contributing to Sound2OSC! This guide explains th
 
 ### High-Level Design
 
-Sound2OSC follows a **modular, layered architecture** with clear separation of concerns:
+sound2osc follows a **modular, layered architecture** with clear separation of concerns:
 
 ```
 ┌─────────────────────────────────────────────┐

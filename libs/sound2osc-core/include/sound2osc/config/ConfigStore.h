@@ -1,4 +1,6 @@
-// Copyright (c) 2016-2026 Electronic Theatre Controls, Inc.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 // SPDX-License-Identifier: MIT
 //
 // Configuration storage abstraction for sound2osc

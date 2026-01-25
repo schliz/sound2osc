@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -41,7 +43,7 @@ int main(int argc, char *argv[]) {
     
     // Qt6: High DPI scaling is enabled by default, AA_EnableHighDpiScaling is deprecated
     QApplication app(argc, argv);
-	app.setWindowIcon(QIcon(":/images/icons/etcicon.ico"));
+	app.setWindowIcon(QIcon(":/images/icons/appicon.ico"));
 
 	// Configure application identity using AppInfo
 	// This allows easy rebranding for forks while maintaining backward compatibility
@@ -54,6 +56,8 @@ int main(int argc, char *argv[]) {
 	Logger::info(QString("Starting %1 v%2")
 	    .arg(AppInfo::applicationDisplayName())
 	    .arg(AppInfo::applicationVersion()));
+    Logger::info("(C) Electronic Theatre Controls, Inc.");
+    Logger::info("(C) Christian Schliz <code+sound2osc@foxat.de>");
 
 	// ----------- Settings Migration --------
 	// Check for legacy QSettings and migrate to new JSON format if needed
@@ -70,12 +74,13 @@ int main(int argc, char *argv[]) {
 	settingsManager->load();
 
 	// ----------- Show Splash Screen --------
-	QPixmap pixmap(":/images/icons/etclogo.png");
-	QSplashScreen splash(pixmap);
-	splash.show();
+    // Splash screen disabled to remove ETC branding (user can re-enable with custom logo)
+	// QPixmap pixmap(":/images/icons/logo.png");
+	// QSplashScreen splash(pixmap);
+	// splash.show();
 
 	// call processEvents() to load image in Splash Screen:
-	app.processEvents();
+	// app.processEvents();
 
 	// ----------- Load QML ---------------
 
@@ -100,7 +105,7 @@ int main(int argc, char *argv[]) {
     controller->initAfterQmlIsLoaded();
 
 	// ---------- Hide Splash Screen ---------
-	splash.hide();
+	// splash.hide();
 	
 	Logger::info("Application initialized successfully");
 

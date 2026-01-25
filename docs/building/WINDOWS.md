@@ -1,6 +1,6 @@
-# Building Sound2OSC on Windows
+# Building sound2osc on Windows
 
-This guide covers building Sound2OSC from source on Windows.
+This guide covers building sound2osc from source on Windows.
 
 ## Prerequisites
 

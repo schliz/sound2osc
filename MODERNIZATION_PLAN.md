@@ -1,4 +1,4 @@
-# Sound2OSC Modernization Plan
+# sound2osc Modernization Plan
 
 **Status:** Phase 1 - Complete, Phase 2 - Complete, Phase 3 - Complete, Phase 4 - In Progress  
 **Last Updated:** 2026-01-19  
@@ -35,7 +35,7 @@ This document outlines the comprehensive plan to modernize the sound2osc project
 - Uses deprecated `QLinkedList`
 - Monolithic GUI application (no headless support)
 - qmake build system (outdated)
-- Hard-coded organization name "ETC" in source
+- Hard-coded organization name in source
 
 ### Logical Components Identified
 

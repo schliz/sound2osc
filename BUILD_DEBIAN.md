@@ -2,7 +2,7 @@
 
 This guide provides step-by-step instructions for building the sound2osc application on Debian 13 (trixie) or Debian 14 (testing) using the modern CMake build system.
 
-Note: The project was previously named Sound2Light or "s2l" for short.
+Note: This project is a fork of Sound2Light.
 
 ## Prerequisites
 

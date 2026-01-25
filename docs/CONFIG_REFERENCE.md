@@ -1,6 +1,6 @@
-# Sound2OSC Configuration Reference
+# sound2osc Configuration Reference
 
-This document describes all configuration options for Sound2OSC.
+This document describes all configuration options for sound2osc.
 
 ## Configuration Files
 
@@ -332,7 +332,7 @@ Many settings can be overridden via command-line arguments (headless mode):
 
 ## Migration from Legacy Settings
 
-If you have settings from an older version (using INI format), Sound2OSC will automatically migrate them on first run. A backup of your old settings is created at `settings.ini.backup`.
+If you have settings from an older version (using INI format), sound2osc will automatically migrate them on first run. A backup of your old settings is created at `settings.ini.backup`.
 
 ---
 

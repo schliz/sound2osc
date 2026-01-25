@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -311,7 +313,7 @@ QList<QString> MainController::getWaveColors()
 
 void MainController::setOscEnabled(bool value) {
 	m_osc.setEnabled(value); emit settingsChanged();
-	m_osc.sendMessage(QString("/s2l/out/enabled=").append(value ? "1" : "0"), true);
+	m_osc.sendMessage(QString("/sound2osc/out/enabled=").append(value ? "1" : "0"), true);
 }
 
 // enable or disables bpm detection
@@ -325,7 +327,7 @@ void MainController::setBPMActive(bool value) {
     }
     emit bpmActiveChanged();
     emit waveformVisibleChanged(); // because wavformvisible is only true if bpm is active
-    m_osc.sendMessage("/s2l/out/bpm/enabled", (value ? "1" : "0"), true);
+    m_osc.sendMessage("/sound2osc/out/bpm/enabled", (value ? "1" : "0"), true);
 }
 
 void MainController::setAutoBpm(bool value) {
@@ -346,7 +348,7 @@ void MainController::setMinBPM(int value) {
     m_bpm.setMinBPM(value);
     m_bpmTap.setMinBPM(value);
     emit bpmRangeChanged();
-    m_osc.sendMessage("/s2l/out/bpm/range", QString::number(value), true);
+    m_osc.sendMessage("/sound2osc/out/bpm/range", QString::number(value), true);
 }
 
 void MainController::setWaveformVisible(bool value) {
@@ -488,7 +490,7 @@ void MainController::loadPreset(const QString &constFileName, bool createIfNotEx
 
 	// check if file exists:
 	if (!createIfNotExistent && !QFile(fileName).exists()) {
-		m_osc.sendMessage("/s2l/out/error", QString("Preset does not exist: ").append(fileName), true);
+		m_osc.sendMessage("/sound2osc/out/error", QString("Preset does not exist: ").append(fileName), true);
 		return;
 	}
 
@@ -530,8 +532,8 @@ void MainController::loadPreset(const QString &constFileName, bool createIfNotEx
 	m_presetChangedButNotSaved = false; emit presetChangedButNotSavedChanged();
 	QString baseName = QFileInfo(m_currentPresetFilename).baseName();
 	// give feedback over OSC:
-	m_osc.sendMessage("/s2l/out/active_preset", baseName, true);
-	m_osc.sendMessage("/s2l/out/error", "-", true);
+	m_osc.sendMessage("/sound2osc/out/active_preset", baseName, true);
+	m_osc.sendMessage("/sound2osc/out/error", "-", true);
 
 	// notify the GUI of the changes:
 	emit decibelConversionChanged();
@@ -575,9 +577,9 @@ void MainController::savePresetAs(const QString &constFileName, bool isAutosave)
 	if (fileName.startsWith("file:///")) {
 		fileName = fileName.remove(0, 8);
 	}
-	// all preset files have to end on ".s2l":
-	if (!fileName.toLower().endsWith(".s2l") && !isAutosave) {
-		fileName = fileName + ".s2l";
+	// all preset files have to end on ".s2o" (or .s2l):
+	if (!fileName.toLower().endsWith(".s2o") && !fileName.toLower().endsWith(".s2l") && !isAutosave) {
+		fileName = fileName + ".s2o";
 	}
 
 	// save all general, not independent settings to the preset file:
@@ -819,7 +821,7 @@ void MainController::enableOscLevelFeedback(bool value)
 		m_oscUpdateTimer.stop();
 	}
 	// give feedback about state via OSC:
-	m_osc.sendMessage(QString("/s2l/out/level_feedback=").append(value ? "1" : "0"), true);
+	m_osc.sendMessage(QString("/sound2osc/out/level_feedback=").append(value ? "1" : "0"), true);
 }
 
 void MainController::openSavePresetAsDialog()
@@ -827,7 +829,7 @@ void MainController::openSavePresetAsDialog()
 	// open QWidget based dialog and wait for result (blocking):
 	QString fileName = QFileDialog::getSaveFileName(0, tr("Save Preset As"),
 							   getPresetDirectory(),
-							   tr("Sound2Light Presets (*.s2l)"));
+							   tr("sound2osc Presets (*.s2o *.s2l)"));
 	savePresetAs(fileName);
 }
 
@@ -836,6 +838,6 @@ void MainController::openLoadPresetDialog()
 	// open QWidget based dialog and wait for result (blocking):
 	QString fileName = QFileDialog::getOpenFileName(0, tr("Open Preset"),
 							   getPresetDirectory(),
-							   tr("Sound2Light Presets (*.s2l)"));
+							   tr("sound2osc Presets (*.s2o *.s2l)"));
 	loadPreset(fileName);
 }

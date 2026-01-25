@@ -40,7 +40,7 @@ private slots:
 
     void testApplicationDisplayName()
     {
-        QCOMPARE(AppInfo::applicationDisplayName(), QString("Sound2OSC"));
+        QCOMPARE(AppInfo::applicationDisplayName(), QString("sound2osc"));
     }
 
     void testApplicationVersion()
@@ -51,7 +51,7 @@ private slots:
 
     void testPresetFileExtension()
     {
-        QCOMPARE(AppInfo::presetFileExtension(), QString("s2l"));
+        QCOMPARE(AppInfo::presetFileExtension(), QString("s2o"));
     }
 
     void testSetPresetFileExtension()
@@ -85,13 +85,12 @@ private slots:
 
     void testLegacyOrganizationName()
     {
-        // Legacy name should be ETC for backward compatibility
-        QCOMPARE(AppInfo::legacyOrganizationName(), QString("ETC"));
+        QCOMPARE(AppInfo::legacyOrganizationName(), QString(""));
     }
 
     void testLegacyApplicationName()
     {
-        QCOMPARE(AppInfo::legacyApplicationName(), QString("Sound2Light"));
+        QCOMPARE(AppInfo::legacyApplicationName(), QString("sound2osc"));
     }
 
     void testResetToDefaults()
@@ -107,7 +106,7 @@ private slots:
         // Verify defaults are restored
         QCOMPARE(AppInfo::organizationName(), QString("sound2osc"));
         QCOMPARE(AppInfo::applicationName(), QString("sound2osc"));
-        QCOMPARE(AppInfo::presetFileExtension(), QString("s2l"));
+        QCOMPARE(AppInfo::presetFileExtension(), QString("s2o"));
     }
 
     void cleanupTestCase()

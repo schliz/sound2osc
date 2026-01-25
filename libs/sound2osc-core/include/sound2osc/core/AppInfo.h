@@ -1,5 +1,6 @@
-// Copyright (c) 2016-2026 Electronic Theatre Controls, Inc.
 // SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Application branding and metadata for sound2osc
 
@@ -78,7 +79,7 @@ public:
 
     /**
      * @brief Get application display name (for window titles, etc.)
-     * @return Display name (default: "Sound2OSC")
+     * @return Display name (default: "sound2osc")
      */
     static QString applicationDisplayName();
 
@@ -112,7 +113,7 @@ public:
 
     /**
      * @brief Get preset file extension (without dot)
-     * @return File extension (default: "s2l")
+     * @return File extension (default: "s2o")
      */
     static QString presetFileExtension();
 
@@ -180,13 +181,13 @@ public:
 
     /**
      * @brief Get legacy organization name (for migration from old settings)
-     * @return Legacy organization name (default: "ETC")
+     * @return Legacy organization name
      */
     static QString legacyOrganizationName();
 
     /**
      * @brief Get legacy application name (for migration)
-     * @return Legacy application name (default: "Sound2Light")
+     * @return Legacy application name
      */
     static QString legacyApplicationName();
 

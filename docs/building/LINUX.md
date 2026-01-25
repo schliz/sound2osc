@@ -1,6 +1,6 @@
-# Building Sound2OSC on Linux
+# Building sound2osc on Linux
 
-This guide covers building Sound2OSC from source on Linux distributions.
+This guide covers building sound2osc from source on Linux distributions.
 
 ## Supported Distributions
 
@@ -233,7 +233,7 @@ Create a systemd service file:
 ```ini
 # /etc/systemd/system/sound2osc.service
 [Unit]
-Description=Sound2OSC Audio Analysis Service
+Description=sound2osc Audio Analysis Service
 After=sound.target network.target
 
 [Service]

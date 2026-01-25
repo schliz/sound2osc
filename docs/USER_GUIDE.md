@@ -1,6 +1,6 @@
-# Sound2OSC User Guide
+# sound2osc User Guide
 
-Sound2OSC is a real-time audio analysis application that converts audio signals into OSC (Open Sound Control) messages. It's designed for live performances, lighting control, and interactive installations.
+sound2osc is a real-time audio analysis application that converts audio signals into OSC (Open Sound Control) messages. It's designed for live performances, lighting control, and interactive installations.
 
 ## Table of Contents
 
@@ -33,7 +33,7 @@ Sound2OSC is a real-time audio analysis application that converts audio signals 
 ### First-Time Setup
 
 1. Connect your audio input device (microphone, audio interface, etc.)
-2. Launch Sound2OSC
+2. Launch sound2osc
 3. Select your audio input device from the dropdown
 4. Configure your OSC destination (IP address and port)
 5. Start monitoring and adjust trigger thresholds
@@ -108,7 +108,7 @@ The spectrum is divided into frequency bands from low (bass) to high (treble):
 
 ## Triggers
 
-Triggers are the core feature of Sound2OSC. They detect specific audio characteristics and send OSC messages when conditions are met.
+Triggers are the core feature of sound2osc. They detect specific audio characteristics and send OSC messages when conditions are met.
 
 ### Trigger Types
 
@@ -135,7 +135,7 @@ Triggers are the core feature of Sound2OSC. They detect specific audio character
 
 ## BPM Detection
 
-Sound2OSC includes automatic beat detection.
+sound2osc includes automatic beat detection.
 
 ### How It Works
 
@@ -160,7 +160,7 @@ If automatic detection isn't accurate:
 
 ## OSC Configuration
 
-Sound2OSC sends OSC messages to control external software and hardware.
+sound2osc sends OSC messages to control external software and hardware.
 
 ### Connection Setup
 
@@ -211,7 +211,7 @@ Presets are stored in:
 
 ## Headless Mode
 
-Sound2OSC can run without a GUI for server/embedded use.
+sound2osc can run without a GUI for server/embedded use.
 
 ### Basic Usage
 
@@ -250,7 +250,7 @@ On Linux with systemd:
 ```ini
 # /etc/systemd/system/sound2osc.service
 [Unit]
-Description=Sound2OSC Audio Analysis Service
+Description=sound2osc Audio Analysis Service
 After=sound.target
 
 [Service]
