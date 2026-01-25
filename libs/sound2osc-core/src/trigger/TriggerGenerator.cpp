@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -47,7 +49,7 @@ void TriggerGenerator::toggleMute()
 {
     m_mute = !m_mute;
     m_filter.setMute(m_mute);
-    m_osc->sendMessage("/s2l/out/" + m_name + "/mute", (m_mute ? "1" : "0"), true);
+    m_osc->sendMessage("/sound2osc/out/" + m_name + "/mute", (m_mute ? "1" : "0"), true);
 }
 
 // toggles mute on and off
@@ -55,7 +57,7 @@ void TriggerGenerator::setMute(bool mute)
 {
     m_mute = mute;
     m_filter.setMute(m_mute);
-    m_osc->sendMessage("/s2l/out/" + m_name + "/mute", (m_mute ? "1" : "0"), true);
+    m_osc->sendMessage("/sound2osc/out/" + m_name + "/mute", (m_mute ? "1" : "0"), true);
 }
 
 bool TriggerGenerator::checkForTrigger(ScaledSpectrum &spectrum, bool forceRelease)

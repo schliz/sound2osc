@@ -1,7 +1,8 @@
-// Copyright (c) 2016-2026 Electronic Theatre Controls, Inc.
 // SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
-// Sound2OSC Headless Application
+// sound2osc Headless Application
 // 
 // This is a minimal headless (no GUI) implementation demonstrating
 // that the core library can operate independently. It provides a
@@ -43,9 +44,10 @@ void signalHandler(int signum)
 void printBanner()
 {
     std::cout << "\n"
-              << "  Sound2OSC Headless v" << VERSION_STRING.toStdString() << "\n"
+              << "  sound2osc headless v" << VERSION_STRING.toStdString() << "\n"
               << "  Audio analysis to OSC bridge\n"
               << "  (C) Electronic Theatre Controls, Inc.\n"
+              << "  (C) Christian Schliz <code+sound2osc@foxat.de>\n"
               << std::endl;
 }
 
@@ -54,8 +56,8 @@ int main(int argc, char *argv[])
     QCoreApplication app(argc, argv);
     app.setApplicationName("sound2osc-headless");
     app.setApplicationVersion(VERSION_STRING);
-    app.setOrganizationName("ETC");
-    app.setOrganizationDomain("etcconnect.com");
+    app.setOrganizationName("sound2osc");
+    app.setOrganizationDomain("sound2osc");
 
     // Setup signal handlers for graceful shutdown
     std::signal(SIGINT, signalHandler);
@@ -63,7 +65,7 @@ int main(int argc, char *argv[])
 
     // Command line parsing
     QCommandLineParser parser;
-    parser.setApplicationDescription("Sound2OSC Headless - Audio analysis to OSC without GUI");
+    parser.setApplicationDescription("sound2osc Headless - Audio analysis to OSC without GUI");
     parser.addHelpOption();
     parser.addVersionOption();
 
@@ -139,7 +141,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    Logger::info("Starting Sound2OSC Headless v%1", QString(VERSION_STRING));
+    Logger::info("Starting sound2osc Headless v%1", QString(VERSION_STRING));
 
     // Configuration setup
     QString configPath;

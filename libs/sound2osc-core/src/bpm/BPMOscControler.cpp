@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -31,13 +33,13 @@ void BPMOscControler::setBPMMute(bool mute)
 {
     m_bpmMute = mute;
 
-    m_osc.sendMessage("/s2l/out/bpm/mute", (m_bpmMute ? "1" : "0"), true);
+    m_osc.sendMessage("/sound2osc/out/bpm/mute", (m_bpmMute ? "1" : "0"), true);
 }
 
 void BPMOscControler::toggleBPMMute()
 {
     m_bpmMute = !m_bpmMute;
-    m_osc.sendMessage("/s2l/out/bpm/mute", (m_bpmMute ? "1" : "0"), true);
+    m_osc.sendMessage("/sound2osc/out/bpm/mute", (m_bpmMute ? "1" : "0"), true);
 }
 
 // Restore the commands from e.g. a preset or whatever else
@@ -96,5 +98,5 @@ void BPMOscControler::transmitBPM(float bpm)
     }
 
     // Send information command
-    m_osc.sendMessage("/s2l/out/bpm=" + QString::number(qRound(bpm)), true);
+    m_osc.sendMessage("/sound2osc/out/bpm=" + QString::number(qRound(bpm)), true);
 }

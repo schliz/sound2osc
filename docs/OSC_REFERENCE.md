@@ -1,10 +1,10 @@
-# Sound2OSC OSC Protocol Reference
+# sound2osc OSC Protocol Reference
 
-This document describes all OSC messages sent and received by Sound2OSC.
+This document describes all OSC messages sent and received by sound2osc.
 
 ## Overview
 
-Sound2OSC uses OSC (Open Sound Control) to communicate with external software and hardware. Messages are sent over UDP.
+sound2osc uses OSC (Open Sound Control) to communicate with external software and hardware. Messages are sent over UDP.
 
 ### Default Ports
 
@@ -200,7 +200,7 @@ Error notifications.
 
 ## Incoming Messages
 
-Sound2OSC can receive OSC messages to control its operation.
+sound2osc can receive OSC messages to control its operation.
 
 ### Control Messages
 
@@ -249,7 +249,7 @@ Load a preset.
 
 ## Message Bundling
 
-For efficiency, Sound2OSC bundles related messages together when possible. OSC bundles are timestamped using NTP format.
+For efficiency, sound2osc bundles related messages together when possible. OSC bundles are timestamped using NTP format.
 
 ### Bundle Example
 
@@ -269,7 +269,7 @@ For efficiency, Sound2OSC bundles related messages together when possible. OSC b
 
 Configure a control surface to receive trigger values:
 
-1. Set OSC Host to Sound2OSC IP
+1. Set OSC Host to sound2osc IP
 2. Set OSC Port to 8000
 3. Map faders/buttons to `/sound2osc/trigger/[n]`
 
@@ -278,7 +278,7 @@ Configure a control surface to receive trigger values:
 Receive triggers for cue firing:
 
 1. Add OSC Cue
-2. Set network patch to Sound2OSC port (9000)
+2. Set network patch to sound2osc port (9000)
 3. Trigger on `/sound2osc/beat` or `/sound2osc/trigger/[n]`
 
 ### Max/MSP
@@ -332,14 +332,14 @@ server.serve_forever()
 
 ### No Messages Received
 
-1. Check that OSC client is enabled in Sound2OSC
+1. Check that OSC client is enabled in sound2osc
 2. Verify target IP and port are correct
 3. Check firewall settings on both machines
 4. Use a network analyzer (Wireshark) to verify packets are sent
 
 ### Messages Delayed
 
-1. Reduce audio buffer size in Sound2OSC
+1. Reduce audio buffer size in sound2osc
 2. Use wired network connection instead of WiFi
 3. Ensure receiving application can process messages fast enough
 

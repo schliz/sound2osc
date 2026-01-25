@@ -1,4 +1,6 @@
-// Copyright (c) 2016-2026 Electronic Theatre Controls, Inc.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 // SPDX-License-Identifier: MIT
 
 #include "SettingsMigration.h"
@@ -267,9 +269,9 @@ QString SettingsMigration::backupLegacySettings()
 QString SettingsMigration::legacySettingsPath()
 {
     // QSettings with IniFormat stores in platform-specific locations:
-    // Linux: ~/.config/ETC/Sound2Light.conf
-    // Windows: %APPDATA%/ETC/Sound2Light.ini
-    // macOS: ~/Library/Preferences/com.ETC.Sound2Light.plist (but we use INI)
+    // Linux: ~/.config/<LegacyOrg>/<LegacyApp>.conf
+    // Windows: %APPDATA%/<LegacyOrg>/<LegacyApp>.ini
+    // macOS: ~/Library/Preferences/com.<LegacyOrg>.<LegacyApp>.plist
     
     QSettings::setDefaultFormat(QSettings::IniFormat);
     QSettings legacySettings(AppInfo::legacyOrganizationName(),

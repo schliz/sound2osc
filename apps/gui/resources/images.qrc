@@ -3,9 +3,9 @@
         <file>images/backgroundBlue.png</file>
         <file>images/backgroundGray.png</file>
         <file>images/trash_icon.png</file>
-        <file>images/icons/etcicon.icns</file>
-        <file>images/icons/etclogo.png</file>
-        <file>images/icons/etcicon.ico</file>
+        <file>images/icons/appicon.icns</file>
+        <file>images/icons/logo.png</file>
+        <file>images/icons/appicon.ico</file>
         <file>images/maximize.png</file>
         <file>images/minimize.png</file>
         <file>images/edit.png</file>

@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -54,7 +56,7 @@ Dialog {
 						width: parent.width
 						height: 40
 						font.pointSize: 14
-						text: "Sound2Light"
+						text: "sound2osc"
 					}
 					GreyText {
 						width: parent.width
@@ -64,20 +66,16 @@ Dialog {
 					}
 				}
 
-				// ------------------------- ETC Logo on the right ---------------------
+				// ------------------------- App Logo on the right ---------------------
 				Item {
 					id: logoArea
 					height: parent.height
 					width: 200
 					Image {
-						source: "qrc:/images/icons/etclogo.png"
+						source: "qrc:/images/icons/logo.png"
 						width: 200
 						height: 200
 						anchors.centerIn: parent
-						MouseArea {
-							anchors.fill: parent
-							onClicked: Qt.openUrlExternally("http://www.etcconnect.com")
-						}
 					}
 				}
 			}
@@ -90,14 +88,7 @@ Dialog {
 				GreyText {
 					height: parent.height
 					width: parent.width * 0.4
-					text: "www.etcconnect.com"
-					font.underline: true
-					verticalAlignment: Text.AlignBottom
-					horizontalAlignment: Text.AlignHCenter
-					MouseArea {
-						anchors.fill: parent
-						onClicked: Qt.openUrlExternally("http://www.etcconnect.com")
-					}
+                    // Spacer
 				}
 				DarkButton {
 					height: parent.height
@@ -111,7 +102,7 @@ Dialog {
 				GreyText {
 					height: parent.height
 					width: parent.width * 0.4
-					text: "© ETC GmbH"
+					text: "© ETC Inc. / Christian Schliz"
 					verticalAlignment: Text.AlignBottom
 					horizontalAlignment: Text.AlignHCenter
 				}

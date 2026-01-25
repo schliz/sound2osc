@@ -1,4 +1,4 @@
-# Sound2OSC Troubleshooting Guide
+# sound2osc Troubleshooting Guide
 
 This guide covers common issues and their solutions.
 
@@ -42,7 +42,7 @@ This guide covers common issues and their solutions.
    ```
 
 3. **Select the correct device**
-   - Open Sound2OSC
+   - Open sound2osc
    - Click the audio input dropdown
    - Select your device from the list
 
@@ -70,16 +70,16 @@ This guide covers common issues and their solutions.
 ### Wrong Audio Device Selected
 
 **Symptoms:**
-- Audio works in other apps but not Sound2OSC
+- Audio works in other apps but not sound2osc
 - Device shows "(unavailable)" in dropdown
 
 **Solutions:**
 
 1. **Refresh device list**
-   - Restart Sound2OSC after connecting new devices
+   - Restart sound2osc after connecting new devices
 
 2. **Check device sampling rate**
-   - Sound2OSC supports 44100 Hz and 48000 Hz
+   - sound2osc supports 44100 Hz and 48000 Hz
    - Ensure your device is set to a supported rate
 
 ---
@@ -113,7 +113,7 @@ This guide covers common issues and their solutions.
    sudo firewall-cmd --reload
    ```
 
-3. **Verify OSC settings in Sound2OSC**
+3. **Verify OSC settings in sound2osc**
    - Check target IP address is correct
    - Check target port matches receiving application
    - Ensure OSC client is enabled
@@ -167,7 +167,7 @@ This guide covers common issues and their solutions.
 2. **Kill the conflicting process or use a different port**
    ```bash
    kill <pid>
-   # Or change the port in Sound2OSC settings
+   # Or change the port in sound2osc settings
    ```
 
 ---
@@ -417,7 +417,7 @@ sudo usermod -a -G audio $USER
 
 **Microphone Permission:**
 - Go to System Preferences > Security & Privacy > Privacy
-- Enable microphone access for Sound2OSC
+- Enable microphone access for sound2osc
 
 **Gatekeeper Warning:**
 ```bash

@@ -1,5 +1,6 @@
-// Copyright (c) 2016-2026 Electronic Theatre Controls, Inc.
 // SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 
 #include <sound2osc/core/AppInfo.h>
 #include <sound2osc/core/versionInfo.h>
@@ -10,11 +11,11 @@ namespace sound2osc {
 
 // Static member initialization with defaults
 QString AppInfo::s_organizationName = QStringLiteral("sound2osc");
-QString AppInfo::s_organizationDisplayName = QStringLiteral("Sound2OSC Project");
+QString AppInfo::s_organizationDisplayName = QStringLiteral("sound2osc project");
 QString AppInfo::s_applicationName = QStringLiteral("sound2osc");
-QString AppInfo::s_applicationDisplayName = QStringLiteral("Sound2OSC");
+QString AppInfo::s_applicationDisplayName = QStringLiteral("sound2osc");
 QString AppInfo::s_applicationDescription = QStringLiteral("Real-time audio analysis to OSC trigger events");
-QString AppInfo::s_presetFileExtension = QStringLiteral("s2l");
+QString AppInfo::s_presetFileExtension = QStringLiteral("s2o");
 QString AppInfo::s_autosaveFileExtension = QStringLiteral("ats");
 QString AppInfo::s_configFileName = QStringLiteral("config.json");
 QString AppInfo::s_defaultConsoleType = QStringLiteral("Eos");
@@ -137,23 +138,23 @@ void AppInfo::setDefaultConsoleType(const QString& type)
 // Legacy support
 QString AppInfo::legacyOrganizationName()
 {
-    return QStringLiteral("ETC");
+    return QStringLiteral("");
 }
 
 QString AppInfo::legacyApplicationName()
 {
-    return QStringLiteral("Sound2Light");
+    return QStringLiteral("sound2osc");
 }
 
 // Utility
 void AppInfo::resetToDefaults()
 {
     s_organizationName = QStringLiteral("sound2osc");
-    s_organizationDisplayName = QStringLiteral("Sound2OSC Project");
+    s_organizationDisplayName = QStringLiteral("sound2osc project");
     s_applicationName = QStringLiteral("sound2osc");
-    s_applicationDisplayName = QStringLiteral("Sound2OSC");
+    s_applicationDisplayName = QStringLiteral("sound2osc");
     s_applicationDescription = QStringLiteral("Real-time audio analysis to OSC trigger events");
-    s_presetFileExtension = QStringLiteral("s2l");
+    s_presetFileExtension = QStringLiteral("s2o");
     s_autosaveFileExtension = QStringLiteral("ats");
     s_configFileName = QStringLiteral("config.json");
     s_supportedConsoleTypes = QStringList{

@@ -1,6 +1,6 @@
-# Building Sound2OSC on macOS
+# Building sound2osc on macOS
 
-This guide covers building Sound2OSC from source on macOS.
+This guide covers building sound2osc from source on macOS.
 
 ## Supported Versions
 
@@ -173,7 +173,7 @@ brew install create-dmg
 
 # Create DMG
 create-dmg \
-    --volname "Sound2OSC" \
+    --volname "sound2osc" \
     --volicon "resources/icons/sound2osc.icns" \
     --window-pos 200 120 \
     --window-size 600 400 \
@@ -181,7 +181,7 @@ create-dmg \
     --icon "sound2osc.app" 150 190 \
     --hide-extension "sound2osc.app" \
     --app-drop-link 450 190 \
-    "Sound2OSC-1.0.0.dmg" \
+    "sound2osc-1.0.0.dmg" \
     "build/bin/"
 ```
 

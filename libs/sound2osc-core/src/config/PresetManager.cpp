@@ -1,4 +1,6 @@
-// Copyright (c) 2016-2026 Electronic Theatre Controls, Inc.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 // SPDX-License-Identifier: MIT
 
 #include <sound2osc/config/PresetManager.h>
@@ -277,7 +279,7 @@ QStringList PresetManager::listPresets() const
 {
     QDir dir(m_presetDir);
     QStringList filters;
-    filters << "*.s2l";
+    filters << "*.s2o" << "*.s2l";
     
     QFileInfoList files = dir.entryInfoList(filters, QDir::Files, QDir::Name);
     
@@ -376,9 +378,11 @@ QString PresetManager::cleanFilePath(const QString& rawPath, bool addExtension)
         path = path.mid(7);
     }
     
-    // Add .s2l extension if needed
-    if (addExtension && !path.toLower().endsWith(".s2l")) {
-        path += ".s2l";
+    // Add extension if needed
+    if (addExtension) {
+        if (!path.toLower().endsWith(".s2o") && !path.toLower().endsWith(".s2l")) {
+            path += ".s2o";
+        }
     }
     
     return path;
