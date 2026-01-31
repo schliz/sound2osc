@@ -47,60 +47,52 @@ MainController::MainController(QQmlApplicationEngine* qmlEngine,
                                PresetManager* presetManager,
                                QObject *parent)
 	: QObject(parent)
+    , m_engine(nullptr)
 	, m_qmlEngine(qmlEngine)
 	, m_settingsManager(settingsManager)
 	, m_presetManager(presetManager)
-    , m_buffer(NUM_SAMPLES*4) // more buffer so the bpm detector can get overlaping data
-    , m_audioInput(nullptr)
-	, m_fft(m_buffer, m_triggerContainer)
-	, m_osc()
 	, m_consoleType("Eos")
 	, m_oscMapping(this)
-    , m_lowSoloMode(false)
-    , m_bpmOSC(m_osc)
-    , m_bpm(m_buffer, &m_bpmOSC)
-    , m_bpmTap(&m_bpmOSC)
+    , m_bpmTap(nullptr)
     , m_bpmActive(false)
     , m_waveformVisible(true)
     , m_autoBpm(false)
 {
-	m_audioInput = new QAudioInputWrapper(&m_buffer);
+    // Create the engine
+    m_engine = std::make_unique<Sound2OscEngine>(settingsManager, this);
+    
+    // Initialize BPMTapDetector with the engine's BPMOscController
+    m_bpmTap.setOscController(m_engine->bpmOsc());
 
-	initializeGenerators();
 	connectGeneratorsWithGui();
 }
 
 MainController::~MainController()
 {
 	// delete all objects created on Heap:
-    delete m_audioInput; m_audioInput = nullptr;
-
-    delete m_bass; m_bass = nullptr;
-    delete m_loMid; m_loMid = nullptr;
-    delete m_hiMid; m_hiMid = nullptr;
-    delete m_high; m_high = nullptr;
-    delete m_envelope; m_envelope = nullptr;
-    delete m_silence; m_silence = nullptr;
-
     delete m_bassController; m_bassController = nullptr;
     delete m_loMidController; m_loMidController = nullptr;
     delete m_hiMidController; m_hiMidController = nullptr;
     delete m_highController; m_highController = nullptr;
     delete m_envelopeController; m_envelopeController = nullptr;
     delete m_silenceController; m_silenceController = nullptr;
+    
+    // m_engine will be automatically deleted
 }
 
 void MainController::initBeforeQmlIsLoaded()
 {
 	// init everything that can or must be done before QML file is loaded:
-	connect(&m_osc, &OSCNetworkManager::messageReceived, this, &MainController::messageReceived);
-	connect(&m_osc, &OSCNetworkManager::packetSent, this, &MainController::packetSent);
-	connect(&m_osc, &OSCNetworkManager::useTcpChanged, this, &MainController::useTcpChanged);
-	connect(&m_osc, &OSCNetworkManager::isConnectedChanged, this, &MainController::isConnectedChanged);
-	connect(&m_osc, &OSCNetworkManager::isConnectedChanged, this, &MainController::onConnectedChanged);
-	connect(&m_osc, &OSCNetworkManager::addressChanged, this, &MainController::addressChanged);
-	connect(&m_osc, &OSCNetworkManager::logChanged, this, &MainController::oscLogChanged);
-	connect(&m_osc, &OSCNetworkManager::messageReceived, &m_oscMapping, &OSCMapping::handleMessage);
+    OSCNetworkManager* osc = m_engine->osc();
+    
+	connect(osc, &OSCNetworkManager::messageReceived, this, &MainController::messageReceived);
+	connect(osc, &OSCNetworkManager::packetSent, this, &MainController::packetSent);
+	connect(osc, &OSCNetworkManager::useTcpChanged, this, &MainController::useTcpChanged);
+	connect(osc, &OSCNetworkManager::isConnectedChanged, this, &MainController::isConnectedChanged);
+	connect(osc, &OSCNetworkManager::isConnectedChanged, this, &MainController::onConnectedChanged);
+	connect(osc, &OSCNetworkManager::addressChanged, this, &MainController::addressChanged);
+	connect(osc, &OSCNetworkManager::logChanged, this, &MainController::oscLogChanged);
+	connect(osc, &OSCNetworkManager::messageReceived, &m_oscMapping, &OSCMapping::handleMessage);
 	connect(&m_oscUpdateTimer, &QTimer::timeout, &m_oscMapping, &OSCMapping::sendLevelFeedback);
 
 	// load settings that may be used while QML file is loaded:
@@ -122,37 +114,16 @@ void MainController::initAfterQmlIsLoaded()
 	connect(getMainWindow(), &QQuickWindow::visibilityChanged, this, &MainController::onVisibilityChanged);
 }
 
-void MainController::initializeGenerators()
-{
-	// create TriggerGenerator objects:
-	m_bass = new TriggerGenerator("bass", &m_osc, true, false, 80);
-	m_loMid = new TriggerGenerator("loMid", &m_osc, true, false, 400);
-	m_hiMid = new TriggerGenerator("hiMid", &m_osc, true, false, 1000);
-	m_high = new TriggerGenerator("high", &m_osc, true, false, 5000);
-	m_envelope = new TriggerGenerator("envelope", &m_osc, false);
-	m_silence = new TriggerGenerator("silence", &m_osc, false, true);
-
-	// append triggerGenerators to triggerContainer:
-	// (container is used to access all generators at once)
-    // order is important because of lowSoloMode
-	m_triggerContainer.append(m_bass);
-	m_triggerContainer.append(m_loMid);
-	m_triggerContainer.append(m_hiMid);
-	m_triggerContainer.append(m_high);
-	m_triggerContainer.append(m_envelope);
-	m_triggerContainer.append(m_silence);
-}
-
 void MainController::connectGeneratorsWithGui()
 {
 	// create TriggerGuiController objects
-	// and initialize them with the correct triggerGenerators:
-	m_bassController = new TriggerGuiController(m_bass);
-	m_loMidController = new TriggerGuiController(m_loMid);
-	m_hiMidController = new TriggerGuiController(m_hiMid);
-	m_highController = new TriggerGuiController(m_high);
-	m_envelopeController = new TriggerGuiController(m_envelope);
-	m_silenceController = new TriggerGuiController(m_silence);
+	// and initialize them with the correct triggerGenerators from the Engine:
+	m_bassController = new TriggerGuiController(m_engine->getBass());
+	m_loMidController = new TriggerGuiController(m_engine->getLoMid());
+	m_hiMidController = new TriggerGuiController(m_engine->getHiMid());
+	m_highController = new TriggerGuiController(m_engine->getHigh());
+	m_envelopeController = new TriggerGuiController(m_engine->getEnvelope());
+	m_silenceController = new TriggerGuiController(m_engine->getSilence());
 
 	// set a QML context property for each
 	// so that for example the m_bassController is accessible as "bassController" in QML:
@@ -199,37 +170,30 @@ bool MainController::settingsFormatIsValid(const QString& filePath) const
 void MainController::onConnectedChanged()
 {
 	// send current state via OSC if a new connection was made:
-	if (m_osc.isConnected()) {
+	if (m_engine->osc()->isConnected()) {
 		m_oscMapping.sendCurrentState();
 	}
 }
 
 void MainController::initAudioInput()
 {
-	QString inputDeviceName;
-	// get input device name from settings manager:
-	if (m_settingsManager && m_settingsManager->isValid()) {
-		inputDeviceName = m_settingsManager->inputDeviceName();
-	}
-	// if it is empty, set it to default input:
-	if (inputDeviceName.isEmpty()) {
-		inputDeviceName = m_audioInput->getDefaultInputName();
-	}
+    // The Engine handles audio input initialization based on settings.
+    // We just need to make sure the Engine is started.
+    m_engine->start();
+    
+    // But we also need to handle the "No Input Device" dialog logic if needed.
+    // The Engine applies settings in start(), which sets the input device.
+    
+	QString inputDeviceName = m_engine->audioInput()->getActiveInputName();
+    
 	if (inputDeviceName.isEmpty()) {
 		// if there is no default input, open NoInputDeviceDialog:
 		openDialog("qrc:/qml/NoInputDeviceDialog.qml");
 	} else {
-		// otherwise set the new input by its name:
-		m_audioInput->setInputByName(inputDeviceName);
 		emit inputChanged();
 	}
 
-	// start FFT update timer:
-	connect(&m_fftUpdateTimer, &QTimer::timeout, this, &MainController::updateFFT);
-	m_fftUpdateTimer.start(static_cast<int>(1000.0 / FFT_UPDATE_RATE));
-
-    // set up the BPM timer and start it
-    connect(&m_bpmUpdatetimer, &QTimer::timeout, this, &MainController::updateBPM);
+    // BPM setup
     setBPMActive(m_bpmActive);
 }
 
@@ -247,14 +211,14 @@ void MainController::setBPM(float value)
 
 void MainController::activateBPM()
 {
-    m_bpm.resetCache();
+    m_engine->bpm()->resetCache();
     m_bpmTap.reset();
-    m_bpmUpdatetimer.start(1000.0 / BPM_UPDATE_RATE);
+    // Engine timers are already running
 }
 
 void MainController::deactivateBPM()
 {
-    m_bpmUpdatetimer.stop();
+    // We don't stop engine timers, just logic
 }
 
 void MainController::setConsoleType(QString value)
@@ -271,7 +235,7 @@ QList<qreal> MainController::getSpectrumPoints()
 {
 	// convert const QVector<float>& to QList<qreal> to be used in GUI:
 	QList<qreal> points;
-	const QVector<float>& spectrum = m_fft.getNormalizedSpectrum();
+	const QVector<float>& spectrum = m_engine->fft()->getNormalizedSpectrum();
 	for (int i=0; i<spectrum.size(); ++i) {
 		points.append(spectrum[i]);
 	}
@@ -282,9 +246,9 @@ QList<qreal> MainController::getWavePoints()
 {
     // convert const QVector<float>& to QList<qreal> to be used in GUI:
     QList<qreal> points;
-    const Qt3DCore::QCircularBuffer<float>& wave = m_bpm.getWaveDisplay();
+    const Qt3DCore::QCircularBuffer<float>& wave = m_engine->bpm()->getWaveDisplay();
     for (int i = 0; i < wave.size(); ++i) {
-        points.append(wave.at(i) / 350 * m_fft.getScaledSpectrum().getGain());
+        points.append(wave.at(i) / 350 * m_engine->fft()->getScaledSpectrum().getGain());
     }
     return points;
 }
@@ -293,7 +257,7 @@ QList<bool> MainController::getWaveOnsets()
 {
     // conert const QVector<bool>& to QList<bool> to be used in GUI:
     QList<bool> points;
-    const QVector<bool>& peaks = m_bpm.getOnsets();
+    const QVector<bool>& peaks = m_engine->bpm()->getOnsets();
     for (int i = 0; i < peaks.size(); ++i) {
         points.append(peaks[i]);
     }
@@ -304,7 +268,7 @@ QList<QString> MainController::getWaveColors()
 {
     // convert const QVector<QColoer>& to QList<QString> to be used in GUI:
     QList<QString> points;
-    const Qt3DCore::QCircularBuffer<QColor>& colors = m_bpm.getWaveColors();
+    const Qt3DCore::QCircularBuffer<QColor>& colors = m_engine->bpm()->getWaveColors();
     for (int i = 0; i < colors.size(); ++i) {
         points.append(colors.at(i).name());
     }
@@ -312,8 +276,8 @@ QList<QString> MainController::getWaveColors()
 }
 
 void MainController::setOscEnabled(bool value) {
-	m_osc.setEnabled(value); emit settingsChanged();
-	m_osc.sendMessage(QString("/sound2osc/out/enabled=").append(value ? "1" : "0"), true);
+	m_engine->osc()->setEnabled(value); emit settingsChanged();
+	m_engine->osc()->sendMessage(QString("/sound2osc/out/enabled=").append(value ? "1" : "0"), true);
 }
 
 // enable or disables bpm detection
@@ -327,14 +291,14 @@ void MainController::setBPMActive(bool value) {
     }
     emit bpmActiveChanged();
     emit waveformVisibleChanged(); // because wavformvisible is only true if bpm is active
-    m_osc.sendMessage("/sound2osc/out/bpm/enabled", (value ? "1" : "0"), true);
+    m_engine->osc()->sendMessage("/sound2osc/out/bpm/enabled", (value ? "1" : "0"), true);
 }
 
 void MainController::setAutoBpm(bool value) {
     if (value == m_autoBpm) return;
     m_autoBpm = value;
     qDebug() << m_autoBpm;
-    m_bpm.setTransmitBpm(m_autoBpm);
+    m_engine->bpm()->setTransmitBpm(m_autoBpm);
     if (m_autoBpm && !m_bpmActive) {
         setBPMActive(true);
     } else if (!m_autoBpm && !m_waveformVisible && m_bpmActive) {
@@ -345,10 +309,14 @@ void MainController::setAutoBpm(bool value) {
 
 // sets the minium bpm of the range
 void MainController::setMinBPM(int value) {
-    m_bpm.setMinBPM(value);
+    m_engine->bpm()->setMinBPM(value);
     m_bpmTap.setMinBPM(value);
     emit bpmRangeChanged();
-    m_osc.sendMessage("/sound2osc/out/bpm/range", QString::number(value), true);
+    m_engine->osc()->sendMessage("/sound2osc/out/bpm/range", QString::number(value), true);
+}
+
+int MainController::getMinBPM() {
+    return m_engine->bpm()->getMinBPM();
 }
 
 void MainController::setWaveformVisible(bool value) {
@@ -365,6 +333,7 @@ void MainController::onExit()
 {
     savePresetIndependentSettings();
     autosave();
+    m_engine->stop();
 }
 
 void MainController::onVisibilityChanged()
@@ -490,7 +459,7 @@ void MainController::loadPreset(const QString &constFileName, bool createIfNotEx
 
 	// check if file exists:
 	if (!createIfNotExistent && !QFile(fileName).exists()) {
-		m_osc.sendMessage("/sound2osc/out/error", QString("Preset does not exist: ").append(fileName), true);
+		m_engine->osc()->sendMessage("/sound2osc/out/error", QString("Preset does not exist: ").append(fileName), true);
 		return;
 	}
 
@@ -511,20 +480,21 @@ void MainController::loadPreset(const QString &constFileName, bool createIfNotEx
     setWaveformVisible(settings.value("waveformVisible", true).toBool());
 
 	// restore the settings in all TriggerGenerators:
-	for (int i=0; i<m_triggerContainer.size(); ++i) {
-		m_triggerContainer[i]->restore(settings);
+    QVector<TriggerGeneratorInterface*>& triggers = m_engine->getTriggers();
+	for (int i=0; i<triggers.size(); ++i) {
+		triggers[i]->restore(settings);
 	}
 
     // Restore the settings in the BPMDetector (from here to keep BPM Detector modular)
     setMinBPM(settings.value("bpm/Min", 75).toInt());
 
     // Restore the settings in the BPMOscController
-    m_bpmOSC.restore(settings);
+    m_engine->bpmOsc()->restore(settings);
 
     // Restore the manual BPM
     m_bpmTap.setBpm(static_cast<float>(settings.value("bpm/tapvalue", 60).toInt()));
 
-    m_bpmOSC.setBPMMute(settings.value("bpm/mute", false).toBool());
+    m_engine->bpmOsc()->setBPMMute(settings.value("bpm/mute", false).toBool());
 
 
 	// this is now the loaded preset, update the preset name:
@@ -532,8 +502,8 @@ void MainController::loadPreset(const QString &constFileName, bool createIfNotEx
 	m_presetChangedButNotSaved = false; emit presetChangedButNotSavedChanged();
 	QString baseName = QFileInfo(m_currentPresetFilename).baseName();
 	// give feedback over OSC:
-	m_osc.sendMessage("/sound2osc/out/active_preset", baseName, true);
-	m_osc.sendMessage("/sound2osc/out/error", "-", true);
+	m_engine->osc()->sendMessage("/sound2osc/out/active_preset", baseName, true);
+	m_engine->osc()->sendMessage("/sound2osc/out/error", "-", true);
 
 	// notify the GUI of the changes:
 	emit decibelConversionChanged();
@@ -598,21 +568,22 @@ void MainController::savePresetAs(const QString &constFileName, bool isAutosave)
     settings.setValue("waveformVisible", m_waveformVisible); // store property because getter is for GUI, and only returns true if bpm is active
 
 	// save the settings in all TriggerGenerators:
-	for (int i=0; i<m_triggerContainer.size(); ++i) {
-		m_triggerContainer[i]->save(settings);
+    QVector<TriggerGeneratorInterface*>& triggers = m_engine->getTriggers();
+	for (int i=0; i<triggers.size(); ++i) {
+		triggers[i]->save(settings);
 	}
 
     // save the settings in the BPMDetector (from here to keep BPM Detector modular)
-    settings.setValue("bpm/Min", m_bpm.getMinBPM());
+    settings.setValue("bpm/Min", m_engine->bpm()->getMinBPM());
 
     // save the settings in the BPMOscController
-    m_bpmOSC.save(settings);
+    m_engine->bpmOsc()->save(settings);
 
     // save the manual BPM
     settings.setValue("bpm/tapvalue", m_bpmTap.getBpm());
 
     // save bpm mute
-    settings.setValue("bpm/mute", m_bpmOSC.getBPMMute());
+    settings.setValue("bpm/mute", m_engine->bpmOsc()->getBPMMute());
 
 	if (!isAutosave) {
 		// this is now the loaded preset, update the preset name:
@@ -726,7 +697,7 @@ void MainController::onPresetChanged()
 
 void MainController::sendOscTestMessage(QString message)
 {
-	m_osc.sendMessage(message, true);
+	m_engine->osc()->sendMessage(message, true);
 }
 
 void MainController::openDialog(const QString &qmlDialogFile, QString propertyName, QVariant propertyValue)
@@ -821,7 +792,7 @@ void MainController::enableOscLevelFeedback(bool value)
 		m_oscUpdateTimer.stop();
 	}
 	// give feedback about state via OSC:
-	m_osc.sendMessage(QString("/sound2osc/out/level_feedback=").append(value ? "1" : "0"), true);
+	m_engine->osc()->sendMessage(QString("/sound2osc/out/level_feedback=").append(value ? "1" : "0"), true);
 }
 
 void MainController::openSavePresetAsDialog()
@@ -841,3 +812,55 @@ void MainController::openLoadPresetDialog()
 							   tr("sound2osc Presets (*.s2o *.s2l)"));
 	loadPreset(fileName);
 }
+
+// Low Solo Mode
+bool MainController::getLowSoloMode() const { return m_engine->getLowSoloMode(); }
+void MainController::setLowSoloMode(bool value) { m_engine->setLowSoloMode(value); emit lowSoloModeChanged(); }
+
+// BPM Helpers
+float MainController::getBPM() { return getBPMManual() || m_engine->bpm()->getBPM() == 0.0f ? m_bpmTap.getBpm() : m_engine->bpm()->getBPM(); }
+bool MainController::bpmIsOld() { return m_engine->bpm()->bpmIsOld(); }
+bool MainController::getBPMMute() { return m_engine->bpmOsc()->getBPMMute(); }
+void MainController::toggleBPMMute() { m_engine->bpmOsc()->toggleBPMMute(); emit bpmMuteChanged(); }
+QStringList MainController::getBPMOscCommands() { return m_engine->bpmOsc()->getCommands(); }
+void MainController::setBPMOscCommands(const QStringList commands) { m_engine->bpmOsc()->setCommands(commands); }
+
+// Audio Helpers
+QStringList MainController::getAvailableInputs() const { return m_engine->audioInput()->getAvailableInputs(); }
+QString MainController::getActiveInputName() const { return m_engine->audioInput()->getActiveInputName(); }
+void MainController::setInputByName(const QString& name) { m_engine->audioInput()->setInputByName(name); emit inputChanged(); emit presetChanged(); }
+qreal MainController::getVolume() const { return m_engine->audioInput()->getVolume(); }
+void MainController::setVolume(const qreal& value) { m_engine->audioInput()->setVolume(value); emit presetChanged(); }
+
+// FFT Helpers
+qreal MainController::getFftGain() const { return m_engine->fft()->getScaledSpectrum().getGain(); }
+void MainController::setFftGain(const qreal& value) { m_engine->fft()->getScaledSpectrum().setGain(static_cast<float>(value)); emit gainChanged(); emit presetChanged(); }
+qreal MainController::getFftCompression() const { return m_engine->fft()->getScaledSpectrum().getCompression(); }
+void MainController::setFftCompression(const qreal& value) { m_engine->fft()->getScaledSpectrum().setCompression(static_cast<float>(value)); emit compressionChanged(); emit presetChanged(); }
+bool MainController::getDecibelConversion() const { return m_engine->fft()->getScaledSpectrum().getDecibelConversion(); }
+void MainController::setDecibelConversion(bool value) { m_engine->fft()->getScaledSpectrum().setDecibelConversion(value); emit decibelConversionChanged(); emit presetChanged(); }
+bool MainController::getAgcEnabled() const { return m_engine->fft()->getScaledSpectrum().getAgcEnabled(); }
+void MainController::setAgcEnabled(bool value) { m_engine->fft()->getScaledSpectrum().setAgcEnabled(value); emit agcEnabledChanged(); emit presetChanged(); }
+
+// OSC Helpers
+QString MainController::getOscIpAddress() const { return m_engine->osc()->getIpAddress().toString(); }
+void MainController::setOscIpAddress(const QString& value) { m_engine->osc()->setIpAddress(QHostAddress(value)); emit settingsChanged(); }
+quint16 MainController::getOscUdpTxPort() const { return m_engine->osc()->getUdpTxPort(); }
+void MainController::setOscUdpTxPort(const quint16& value) { m_engine->osc()->setUdpTxPort(value); emit settingsChanged(); }
+quint16 MainController::getOscUdpRxPort() const { return m_engine->osc()->getUdpRxPort(); }
+void MainController::setOscUdpRxPort(const quint16& value) { m_engine->osc()->setUdpRxPort(value); emit settingsChanged(); }
+quint16 MainController::getOscTcpPort() const { return m_engine->osc()->getTcpPort(); }
+void MainController::setOscTcpPort(const quint16& value) { m_engine->osc()->setTcpPort(value); emit settingsChanged(); }
+bool MainController::getOscEnabled() const { return m_engine->osc()->getEnabled(); }
+bool MainController::getUseTcp() const { return m_engine->osc()->getUseTcp(); }
+void MainController::setUseTcp(bool value) { m_engine->osc()->setUseTcp(value); }
+bool MainController::getUseOsc_1_1() const { return m_engine->osc()->getUseOsc_1_1(); }
+void MainController::setUseOsc_1_1(bool value) { m_engine->osc()->setUseOsc_1_1(value); }
+bool MainController::isConnected() const { return m_engine->osc()->isConnected(); }
+QStringList MainController::getOscLog() const { return m_engine->osc()->getLog(); }
+bool MainController::getOscLogIncomingIsEnabled() const { return m_engine->osc()->getLogIncomingIsEnabled(); }
+bool MainController::getOscLogOutgoingIsEnabled() const { return m_engine->osc()->getLogOutgoingIsEnabled(); }
+void MainController::enableOscLogging(bool incoming, bool outgoing) { m_engine->osc()->enableLogging(incoming, outgoing); }
+void MainController::sendOscMessage(QString message, bool forced) { m_engine->osc()->sendMessage(message, forced); }
+void MainController::sendOscMessage(QString path, QString argument, bool forced) { m_engine->osc()->sendMessage(path, argument, forced); }
+void MainController::clearOscLog() const { m_engine->osc()->clearLog(); }

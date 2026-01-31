@@ -16,14 +16,7 @@
 #include <sound2osc/logging/Logger.h>
 #include <sound2osc/config/JsonConfigStore.h>
 #include <sound2osc/config/SettingsManager.h>
-#include <sound2osc/config/PresetManager.h>
-#include <sound2osc/audio/MonoAudioBuffer.h>
-#include <sound2osc/audio/QAudioInputWrapper.h>
-#include <sound2osc/dsp/FFTAnalyzer.h>
-#include <sound2osc/osc/OSCNetworkManager.h>
-#include <sound2osc/bpm/BPMDetector.h>
-#include <sound2osc/bpm/BPMOscControler.h>
-#include <sound2osc/trigger/TriggerGenerator.h>
+#include <sound2osc/core/Sound2OscEngine.h>
 #include <sound2osc/core/versionInfo.h>
 
 #include <csignal>
@@ -31,13 +24,15 @@
 
 using namespace sound2osc;
 
-// Global flag for graceful shutdown
-static bool g_running = true;
+// Global engine pointer for signal handling
+static Sound2OscEngine* g_engine = nullptr;
 
 void signalHandler(int signum)
 {
     Logger::info("Received signal %1, shutting down...", signum);
-    g_running = false;
+    if (g_engine) {
+        g_engine->stop();
+    }
     QCoreApplication::quit();
 }
 
@@ -124,13 +119,28 @@ int main(int argc, char *argv[])
 
     printBanner();
 
-    // Create audio buffer and input wrapper (needed for device listing)
-    MonoAudioBuffer buffer(NUM_SAMPLES * 4);
-    QAudioInputWrapper audioInput(&buffer);
+    // Configuration setup
+    QString configPath;
+    if (parser.isSet(configOption)) {
+        configPath = parser.value(configOption);
+    } else {
+        configPath = JsonConfigStore::getDefaultConfigPath("sound2osc-headless");
+    }
+
+    auto configStore = std::make_shared<JsonConfigStore>(configPath);
+    configStore->load();
+
+    auto settings = std::make_shared<SettingsManager>(configStore);
+    settings->load();
+
+    // Create the Engine
+    Sound2OscEngine engine(settings);
+    g_engine = &engine;
 
     // Handle --list-devices
+    // We need to initialize the engine components to list devices, but not start processing
     if (parser.isSet(listDevicesOption)) {
-        QStringList devices = audioInput.getAvailableInputs();
+        QStringList devices = engine.audioInput()->getAvailableInputs();
         std::cout << "Available audio input devices:" << std::endl;
         for (int i = 0; i < devices.size(); ++i) {
             std::cout << "  [" << i << "] " << devices[i].toStdString() << std::endl;
@@ -143,110 +153,27 @@ int main(int argc, char *argv[])
 
     Logger::info("Starting sound2osc Headless v%1", QString(VERSION_STRING));
 
-    // Configuration setup
-    QString configPath;
-    if (parser.isSet(configOption)) {
-        configPath = parser.value(configOption);
-    } else {
-        configPath = JsonConfigStore::getDefaultConfigPath("sound2osc-headless");
-    }
-
-    auto configStore = std::make_shared<JsonConfigStore>(configPath);
-    configStore->load();
-
-    SettingsManager settings(configStore);
-    settings.load();
-
-    // Apply command line overrides
+    // Apply command line overrides to settings
     if (parser.isSet(oscHostOption)) {
-        settings.setOscIpAddress(parser.value(oscHostOption));
+        settings->setOscIpAddress(parser.value(oscHostOption));
     }
     if (parser.isSet(oscPortOption)) {
         bool ok;
         int port = parser.value(oscPortOption).toInt(&ok);
         if (ok && port > 0 && port < 65536) {
-            settings.setOscUdpTxPort(static_cast<quint16>(port));
+            settings->setOscUdpTxPort(static_cast<quint16>(port));
         }
     }
-
-    // Set up audio input
-    QString inputDevice = parser.isSet(inputDeviceOption) 
-        ? parser.value(inputDeviceOption) 
-        : settings.inputDeviceName();
-
-    if (!inputDevice.isEmpty()) {
-        Logger::info("Setting audio input: %1", inputDevice);
-        audioInput.setInputByName(inputDevice);
-    }
-
-    // Show active input
-    Logger::info("Active audio input: %1", audioInput.getActiveInputName());
-
-    // Create OSC manager
-    OSCNetworkManager osc;
-    osc.setIpAddress(QHostAddress(settings.oscIpAddress()));
-    osc.setUdpTxPort(settings.oscUdpTxPort());
-    osc.setEnabled(true);
-
-    Logger::info("OSC output: %1:%2", settings.oscIpAddress(), settings.oscUdpTxPort());
-
-    // Create BPM detection components
-    BPMOscControler bpmOsc(osc);
-    BPMDetector bpmDetector(buffer, &bpmOsc);
-
-    // Create trigger generators container
-    QVector<TriggerGeneratorInterface*> triggerContainer;
     
-    // Create trigger generators
-    TriggerGenerator* bass = new TriggerGenerator("bass", &osc, true, false, 80);
-    TriggerGenerator* loMid = new TriggerGenerator("loMid", &osc, true, false, 400);
-    TriggerGenerator* hiMid = new TriggerGenerator("hiMid", &osc, true, false, 1000);
-    TriggerGenerator* high = new TriggerGenerator("high", &osc, true, false, 5000);
-    TriggerGenerator* envelope = new TriggerGenerator("envelope", &osc, false);
-    TriggerGenerator* silence = new TriggerGenerator("silence", &osc, false, true);
+    if (parser.isSet(inputDeviceOption)) {
+        settings->setInputDeviceName(parser.value(inputDeviceOption));
+    }
 
-    triggerContainer.append(bass);
-    triggerContainer.append(loMid);
-    triggerContainer.append(hiMid);
-    triggerContainer.append(high);
-    triggerContainer.append(envelope);
-    triggerContainer.append(silence);
+    // Start the engine
+    engine.start();
 
-    // Create FFT analyzer
-    FFTAnalyzer fft(buffer, triggerContainer);
-
-    // Audio input is started automatically by QAudioInputWrapper constructor
-
-    // FFT update timer (44 Hz)
-    QTimer fftTimer;
-    QObject::connect(&fftTimer, &QTimer::timeout, [&]() {
-        if (g_running) {
-            fft.calculateFFT(false);
-        }
-    });
-    fftTimer.start(1000 / 44);  // ~44 Hz
-
-    // BPM update timer
-    QTimer bpmTimer;
-    QObject::connect(&bpmTimer, &QTimer::timeout, [&]() {
-        if (g_running) {
-            bpmDetector.detectBPM();
-        }
-    });
-    bpmTimer.start(1000 / 44);
-
-    // Status update timer (every 5 seconds)
-    QTimer statusTimer;
-    QObject::connect(&statusTimer, &QTimer::timeout, [&]() {
-        if (g_running) {
-            float bpm = bpmDetector.getBPM();
-            Logger::debug("Status: BPM=%1, Audio=%2", 
-                         QString::number(static_cast<double>(bpm), 'f', 1),
-                         audioInput.getActiveInputName());
-        }
-    });
-    statusTimer.start(5000);
-
+    Logger::info("Active audio input: %1", engine.audioInput()->getActiveInputName());
+    Logger::info("OSC output: %1:%2", settings->oscIpAddress(), settings->oscUdpTxPort());
     Logger::info("Headless mode running. Press Ctrl+C to stop.");
 
     // Run event loop
@@ -254,21 +181,10 @@ int main(int argc, char *argv[])
 
     // Cleanup
     Logger::info("Shutting down...");
+    engine.stop();
     
-    fftTimer.stop();
-    bpmTimer.stop();
-    statusTimer.stop();
-
-    // Delete trigger generators
-    delete bass;
-    delete loMid;
-    delete hiMid;
-    delete high;
-    delete envelope;
-    delete silence;
-
     // Save settings
-    settings.save();
+    settings->save();
 
     Logger::info("Goodbye!");
     Logger::shutdown();

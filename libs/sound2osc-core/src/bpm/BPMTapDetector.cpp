@@ -90,7 +90,7 @@ void BPMTapDetector::triggerBeat() {
     // averageBeatDuration is in sec
     float averageBeatDuration = static_cast<float>(sumBeatDuration) / static_cast<float>(m_lastBeats.size() - 1);
     m_bpm = bpmInRange((1.0f / averageBeatDuration) * 60.0f, m_minBPM);
-    m_oscController->transmitBPM(m_bpm);
+    if(m_oscController) m_oscController->transmitBPM(m_bpm);
 }
 
 void BPMTapDetector::reset() {

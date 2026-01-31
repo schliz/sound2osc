@@ -54,7 +54,9 @@ class BPMTapDetector
 
 public:
 
-    explicit BPMTapDetector(BPMOscControler* osc);
+    explicit BPMTapDetector(BPMOscControler* osc = nullptr);
+
+    void setOscController(BPMOscControler* osc) { m_oscController = osc; }
 
     void triggerBeat(); // "Tap" impulse
 
@@ -63,7 +65,7 @@ public:
     bool hasBpm() { return m_bpm != 0; } // Wether there is a value
 
     float getBpm() const { return m_bpm; } // Get the current bpm
-    void setBpm(float value) { m_bpm = value; m_oscController->transmitBPM(m_bpm);} // Set the bpm (if a user enters a value by keypad)
+    void setBpm(float value) { m_bpm = value; if(m_oscController) m_oscController->transmitBPM(m_bpm);} // Set the bpm (if a user enters a value by keypad)
 
     void setMinBPM(int value); // Sets the minimum bpm of the range
 

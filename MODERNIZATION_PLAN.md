@@ -34,13 +34,13 @@ The current test suite covers infrastructure (Config, Logging, OSC) but lacks co
 Currently, the business logic (wiring Audio to FFT to Triggers) is duplicated between `apps/gui/src/controllers/MainController.cpp` and `apps/headless/main.cpp`.
 
 ### 5.1 Extract Core Engine
-- [ ] **Create `Sound2OscEngine` class** in `libs/sound2osc-core`.
+- [x] **Create `Sound2OscEngine` class** in `libs/sound2osc-core`.
     - Move wiring logic from `MainController` and `headless/main.cpp` into this class.
     - Should own `AudioInput`, `FFTAnalyzer`, `TriggerGenerator`s, and `BPMDetector`.
     - Should handle the main processing loop/timers.
-- [ ] **Refactor Headless App**
+- [x] **Refactor Headless App**
     - Replace raw component instantiation in `headless/main.cpp` with `Sound2OscEngine`.
-- [ ] **Refactor GUI App**
+- [x] **Refactor GUI App**
     - Update `MainController` to wrap `Sound2OscEngine` instead of managing individual components.
     - `MainController` becomes strictly a bridge between QML and the Engine.
 
