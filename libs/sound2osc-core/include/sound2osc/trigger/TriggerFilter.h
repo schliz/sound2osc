@@ -30,6 +30,7 @@
 #include <QTimer>
 #include <QSettings>
 #include <QtMath>
+#include <QJsonObject>
 
 
 // Forward declaration to reduce dependencies:
@@ -88,6 +89,10 @@ public:
 
 	// restores parameters from QSettings
 	void restore(const QString name, QSettings& settings);
+
+    // Modern JSON serialization
+    QJsonObject toState() const;
+    void fromState(const QJsonObject& state);
 
 signals:
 	// will be emitted when filtered on signal is sent

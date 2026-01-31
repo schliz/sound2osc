@@ -9,6 +9,7 @@
 #include <QObject>
 #include <QTimer>
 #include <QVector>
+#include <QJsonObject>
 #include <memory>
 
 #include <sound2osc/audio/MonoAudioBuffer.h>
@@ -74,6 +75,18 @@ public:
     
     void setLowSoloMode(bool enabled);
     bool getLowSoloMode() const { return m_lowSoloMode; }
+
+    // -- Preset State Management --
+    
+    /**
+     * @brief Serialize the complete engine state (triggers, BPM settings, etc.) to JSON
+     */
+    QJsonObject toState() const;
+
+    /**
+     * @brief Restore engine state from JSON
+     */
+    void fromState(const QJsonObject& state);
 
 public slots:
     // Apply settings from SettingsManager to components

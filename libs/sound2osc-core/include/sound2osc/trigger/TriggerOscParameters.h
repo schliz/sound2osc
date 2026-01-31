@@ -20,13 +20,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef TRIGGEROSCSETTINGS_H
-#define TRIGGEROSCSETTINGS_H
+#ifndef TRIGGEROSCPARAMETERS_H
+#define TRIGGEROSCPARAMETERS_H
 
 #include <QtGlobal>
 #include <QString>
 #include <QSettings>
-
+#include <QJsonObject>
 
 // A class to store OSC parameters (messages and min and max values).
 class TriggerOscParameters
@@ -71,6 +71,10 @@ public:
 	// restores the parameters from QSettings with the given name
 	void restore(const QString name, QSettings& settings);
 
+    // Modern JSON serialization
+    QJsonObject toState() const;
+    void fromState(const QJsonObject& state);
+
 	// resets all parameters to default values
 	void resetParameters();
 
@@ -84,4 +88,4 @@ protected:
 
 };
 
-#endif // TRIGGEROSCSETTINGS_H
+#endif // TRIGGEROSCPARAMETERS_H

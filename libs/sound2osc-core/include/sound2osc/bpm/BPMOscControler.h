@@ -25,6 +25,7 @@
 
 #include <sound2osc/osc/OSCNetworkManager.h>
 #include <QSettings>
+#include <QJsonObject>
 
 class BPMOscControler
 {
@@ -44,6 +45,10 @@ public:
 
     // Save the commands for e.g. a preset
     void save(QSettings& settings);
+
+    // Modern JSON serialization
+    QJsonObject toState() const;
+    void fromState(const QJsonObject& state);
 
     // --------------------------------------- GUI Functions -----------------------------------------------
     // Returns the commands

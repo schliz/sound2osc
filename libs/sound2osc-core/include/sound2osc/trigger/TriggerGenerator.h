@@ -20,8 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BANDPASSTRIGGERGENERATOR_H
-#define BANDPASSTRIGGERGENERATOR_H
+#ifndef TRIGGERGENERATOR_H
+#define TRIGGERGENERATOR_H
 
 #include <sound2osc/trigger/TriggerGeneratorInterface.h>
 #include <sound2osc/dsp/ScaledSpectrum.h>
@@ -31,6 +31,7 @@
 #include <QObject>
 #include <QSettings>
 #include <QDebug>
+#include <QJsonObject>
 
 
 // Forward declaration to reduce dependencies:
@@ -105,6 +106,10 @@ public:
 	// restores parameters from QSettings
 	void restore(QSettings& settings) override;
 
+    // Modern JSON serialization
+    QJsonObject toState() const override;
+    void fromState(const QJsonObject& state) override;
+
 	// resets all parameters to default values
 	void resetParameters();
 
@@ -124,4 +129,4 @@ protected:
 
 };
 
-#endif // BANDPASSTRIGGERGENERATOR_H
+#endif // TRIGGERGENERATOR_H

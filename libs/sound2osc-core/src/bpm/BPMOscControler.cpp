@@ -21,6 +21,7 @@
 // THE SOFTWARE.
 
 #include <sound2osc/bpm/BPMOscControler.h>
+#include <QJsonArray>
 
 BPMOscControler::BPMOscControler(OSCNetworkManager &osc) :
     m_bpmMute(false)
@@ -62,6 +63,30 @@ void BPMOscControler::save(QSettings& settings) {
     // Store each command under the key "bpm/osc/*index*"
     for (int index = 0; index < m_oscCommands.size(); ++index) {
         settings.setValue("bpm/osc/" + QString::number(index), m_oscCommands[index]);
+    }
+}
+
+QJsonObject BPMOscControler::toState() const
+{
+    QJsonObject state;
+    QJsonArray commands;
+    for (const QString& cmd : m_oscCommands) {
+        commands.append(cmd);
+    }
+    state["commands"] = commands;
+    // Mute state is typically not saved in the preset but runtime, 
+    // but the original code didn't save it. Let's stick to commands for now.
+    return state;
+}
+
+void BPMOscControler::fromState(const QJsonObject& state)
+{
+    m_oscCommands.clear();
+    if (state.contains("commands")) {
+        QJsonArray commands = state["commands"].toArray();
+        for (const auto& cmd : commands) {
+            m_oscCommands.append(cmd.toString());
+        }
     }
 }
 

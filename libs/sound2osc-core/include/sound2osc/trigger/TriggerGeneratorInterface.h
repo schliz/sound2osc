@@ -27,6 +27,7 @@
 #include <sound2osc/trigger/TriggerFilter.h>
 
 #include <QObject>
+#include <QJsonObject>
 
 
 // Forward declaration to reduce dependencies:
@@ -54,6 +55,10 @@ public:
 
 	// restores parameters from QSettings
 	virtual void restore(QSettings& settings) = 0;
+
+    // Modern JSON serialization
+    virtual QJsonObject toState() const = 0;
+    virtual void fromState(const QJsonObject& state) = 0;
 
     // returns if this is a Bandpass trigger generator
     bool isBandpass() const { return m_isBandpass; }
