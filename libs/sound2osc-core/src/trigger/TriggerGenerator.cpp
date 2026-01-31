@@ -61,7 +61,7 @@ void TriggerGenerator::setMute(bool mute)
     m_osc->sendMessage("/sound2osc/out/" + m_name + "/mute", (m_mute ? "1" : "0"), true);
 }
 
-bool TriggerGenerator::checkForTrigger(ScaledSpectrum &spectrum, bool forceRelease)
+bool TriggerGenerator::checkForTrigger(const ScaledSpectrum &spectrum, bool forceRelease)
 {
 	qreal value;
 	if (m_isBandpass) {
@@ -100,10 +100,10 @@ bool TriggerGenerator::checkForTrigger(ScaledSpectrum &spectrum, bool forceRelea
 
 void TriggerGenerator::save(QSettings& settings) const
 {
-    settings.setValue(m_name + "/mute", m_mute);
-    settings.setValue(m_name + "/threshold", m_threshold);
-	settings.setValue(m_name + "/midFreq", m_midFreq);
-	settings.setValue(m_name + "/width", m_width);
+    settings.setValue(m_name + "/mute", m_mute.load());
+    settings.setValue(m_name + "/threshold", m_threshold.load());
+	settings.setValue(m_name + "/midFreq", m_midFreq.load());
+	settings.setValue(m_name + "/width", m_width.load());
 	m_filter.save(m_name, settings);
 	m_oscParameters.save(m_name, settings);
 }
@@ -121,10 +121,10 @@ void TriggerGenerator::restore(QSettings& settings)
 QJsonObject TriggerGenerator::toState() const
 {
     QJsonObject state;
-    state["mute"] = m_mute;
-    state["threshold"] = m_threshold;
-    state["midFreq"] = m_midFreq;
-    state["width"] = m_width;
+    state["mute"] = m_mute.load();
+    state["threshold"] = m_threshold.load();
+    state["midFreq"] = m_midFreq.load();
+    state["width"] = m_width.load();
     state["filter"] = m_filter.toState();
     state["osc"] = m_oscParameters.toState();
     return state;

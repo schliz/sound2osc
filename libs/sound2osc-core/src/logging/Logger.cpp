@@ -49,14 +49,8 @@ void Logger::shutdown()
     Logger& logger = instance();
     QMutexLocker locker(&logger.m_mutex);
     
-    if (logger.m_logStream) {
-        logger.m_logStream->flush();
-        logger.m_logStream.reset();
-    }
-    
-    if (logger.m_logFile) {
-        logger.m_logFile->close();
-        logger.m_logFile.reset();
+    if (logger.m_logFileStream.is_open()) {
+        logger.m_logFileStream.close();
     }
     
     if (logger.m_outputs & static_cast<int>(Output::System)) {
@@ -86,36 +80,29 @@ bool Logger::setLogFile(const QString& filePath)
     QMutexLocker locker(&logger.m_mutex);
     
     // Close existing file if open
-    if (logger.m_logStream) {
-        logger.m_logStream->flush();
-        logger.m_logStream.reset();
-    }
-    if (logger.m_logFile) {
-        logger.m_logFile->close();
-        logger.m_logFile.reset();
+    if (logger.m_logFileStream.is_open()) {
+        logger.m_logFileStream.close();
     }
     
-    // Ensure parent directory exists
-    QFileInfo fileInfo(filePath);
-    QDir dir = fileInfo.dir();
-    if (!dir.exists()) {
-        if (!dir.mkpath(".")) {
-            std::cerr << "Logger: Failed to create log directory: " 
-                      << dir.absolutePath().toStdString() << std::endl;
-            return false;
+    std::filesystem::path path(filePath.toStdString());
+    
+    try {
+        if (path.has_parent_path()) {
+            std::filesystem::create_directories(path.parent_path());
         }
-    }
-    
-    // Open new log file
-    logger.m_logFile = std::make_unique<QFile>(filePath);
-    if (!logger.m_logFile->open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
-        std::cerr << "Logger: Failed to open log file: " 
-                  << filePath.toStdString() << std::endl;
-        logger.m_logFile.reset();
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Logger: Failed to create log directory: " << e.what() << std::endl;
         return false;
     }
     
-    logger.m_logStream = std::make_unique<QTextStream>(logger.m_logFile.get());
+    // Open new log file
+    logger.m_logFileStream.open(path, std::ios::out | std::ios::app);
+    if (!logger.m_logFileStream.is_open()) {
+        std::cerr << "Logger: Failed to open log file: " 
+                  << filePath.toStdString() << std::endl;
+        return false;
+    }
+    
     logger.m_outputs |= static_cast<int>(Output::File);
     
     return true;
@@ -171,7 +158,7 @@ QString Logger::getDefaultLogDir()
 {
     QString configDir = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
     if (configDir.isEmpty()) {
-        configDir = QDir::homePath() + "/.config/sound2osc";
+        configDir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/.config/sound2osc";
     }
     return configDir + "/logs";
 }
@@ -205,7 +192,7 @@ void Logger::log(Level level, const QString& message)
     }
     
     // Write to file
-    if ((m_outputs & static_cast<int>(Output::File)) && m_logStream) {
+    if ((m_outputs & static_cast<int>(Output::File)) && m_logFileStream.is_open()) {
         writeToFile(formattedMessage);
     }
     
@@ -244,9 +231,8 @@ void Logger::writeToConsole(Level level, const QString& formattedMessage)
 
 void Logger::writeToFile(const QString& formattedMessage)
 {
-    if (m_logStream) {
-        *m_logStream << formattedMessage << "\n";
-        m_logStream->flush();
+    if (m_logFileStream.is_open()) {
+        m_logFileStream << formattedMessage.toStdString() << std::endl;
     }
 }
 

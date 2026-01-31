@@ -234,7 +234,6 @@ BPMDetector::BPMDetector(const MonoAudioBuffer &buffer, BPMOscControler *osc) :
   , m_bpm(0)
   , m_framesSinceLastBPMDetection(0)
   , m_minBPM(75)
-  , m_fft()
   , m_window(NUM_BPM_FFT_SAMPLES)
   , m_onsetBuffer(FRAMES_TO_CACHE)
   , m_spectralFluxBuffer(FRAMES_TO_CACHE)
@@ -249,13 +248,12 @@ BPMDetector::BPMDetector(const MonoAudioBuffer &buffer, BPMOscControler *osc) :
   , m_transmitBpm(false)
   , m_oscController(osc)
 {
-    m_fft = static_cast<BasicFFTInterface*>(new FFTRealWrapper<NUM_BPM_FFT_SAMPLES_EXPONENT>());
+    m_fft = std::make_unique<FFTRealWrapper<NUM_BPM_FFT_SAMPLES_EXPONENT>>();
     calculateWindow();
 }
 
 BPMDetector::~BPMDetector()
 {
-    delete m_fft;
 }
 
 void BPMDetector::resetCache()

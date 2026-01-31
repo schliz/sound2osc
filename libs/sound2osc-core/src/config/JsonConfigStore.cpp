@@ -6,12 +6,13 @@
 #include <sound2osc/config/JsonConfigStore.h>
 #include <sound2osc/logging/Logger.h>
 
-#include <QFile>
-#include <QDir>
-#include <QFileInfo>
-#include <QSaveFile>
 #include <QStandardPaths>
 #include <QJsonArray>
+#include <QJsonDocument>
+
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 
 namespace sound2osc {
 
@@ -39,7 +40,7 @@ QString JsonConfigStore::getDefaultConfigPath(const QString& appName)
     QString configDir = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
     if (configDir.isEmpty()) {
         // Fallback for systems without standard paths
-        configDir = QDir::homePath() + "/." + appName;
+        configDir = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/." + appName;
     }
     return configDir + "/config.json";
 }
@@ -240,20 +241,26 @@ bool JsonConfigStore::load()
         return false;
     }
     
-    QFile file(m_filePath);
-    if (!file.exists()) {
+    std::filesystem::path path(m_filePath.toStdString());
+    
+    if (!std::filesystem::exists(path)) {
         Logger::info("Config file does not exist, will create: %1", m_filePath);
         ensureStructure();
         m_dirty = true;
         return true;  // Not an error, will be created on save
     }
     
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    std::ifstream file(path);
+    if (!file.is_open()) {
         Logger::error("Failed to open config file: %1", m_filePath);
         return false;
     }
     
-    QByteArray data = file.readAll();
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string content = buffer.str();
+    QByteArray data = QByteArray::fromStdString(content);
+    
     file.close();
     
     QJsonParseError parseError;
@@ -287,19 +294,23 @@ bool JsonConfigStore::save()
         return false;
     }
     
-    // Ensure parent directory exists
-    QFileInfo fileInfo(m_filePath);
-    QDir dir = fileInfo.dir();
-    if (!dir.exists()) {
-        if (!dir.mkpath(".")) {
-            Logger::error("Failed to create config directory: %1", dir.absolutePath());
-            return false;
+    std::filesystem::path path(m_filePath.toStdString());
+    
+    try {
+        if (path.has_parent_path()) {
+            std::filesystem::create_directories(path.parent_path());
         }
+    } catch (const std::filesystem::filesystem_error& e) {
+        Logger::error("Failed to create config directory: %1", QString::fromStdString(e.what()));
+        return false;
     }
     
     // Use atomic write (write to temp, then rename)
-    QSaveFile file(m_filePath);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    std::filesystem::path tempPath = path;
+    tempPath += ".tmp";
+    
+    std::ofstream file(tempPath);
+    if (!file.is_open()) {
         Logger::error("Failed to open config file for writing: %1", m_filePath);
         return false;
     }
@@ -307,14 +318,21 @@ bool JsonConfigStore::save()
     QJsonDocument doc(m_root);
     QByteArray data = doc.toJson(QJsonDocument::Indented);
     
-    if (file.write(data) != data.size()) {
+    file << data.toStdString();
+    
+    if (file.fail()) {
         Logger::error("Failed to write config data");
-        file.cancelWriting();
+        file.close();
+        std::filesystem::remove(tempPath);
         return false;
     }
     
-    if (!file.commit()) {
-        Logger::error("Failed to commit config file: %1", m_filePath);
+    file.close();
+    
+    try {
+        std::filesystem::rename(tempPath, path);
+    } catch (const std::filesystem::filesystem_error& e) {
+        Logger::error("Failed to commit config file: %1", QString::fromStdString(e.what()));
         return false;
     }
     
