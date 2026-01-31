@@ -45,7 +45,7 @@ public:
 
 	// checks if a signal should be triggered by analyzing the given spectrum
     // forceRelease is true when low solo mode is active and a lower trigger was activated
-    virtual bool checkForTrigger(ScaledSpectrum& spectrum, bool forceRelease) = 0;
+    virtual bool checkForTrigger(const ScaledSpectrum& spectrum, bool forceRelease) = 0;
 
 	// returns a reference to the internal TriggerFilter
 	virtual TriggerFilter& getTriggerFilter() = 0;

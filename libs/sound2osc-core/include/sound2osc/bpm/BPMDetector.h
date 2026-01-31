@@ -33,6 +33,7 @@
 #include <QVector>
 #include <list>
 #include <QColor>
+#include <memory>
 
 // Rate to calculate the BPM (significantly lower than the sampling period,
 // but still only quater the buffer length, so this should be fine)
@@ -93,7 +94,7 @@ protected:
     float                               m_bpm; // the detected bpm
     int                                 m_framesSinceLastBPMDetection; // time since the bpm has last changed in frames
     int                                 m_minBPM; // the minimum bpm that sets the range of possible bpms as min to 2*min. That solves the 60 vs 120 BPM debate
-    BasicFFTInterface*                  m_fft; // FFT implementation
+    std::unique_ptr<BasicFFTInterface>  m_fft; // FFT implementation
     QVector<float>                      m_window; // array with window data
     QVector<bool>                       m_onsetBuffer; // a boolen buffer indicating wether there was a onset i frames ago
     Qt3DCore::QCircularBuffer<float>    m_spectralFluxBuffer; // a float buffer caching the spectral flux of the bands of the last frames

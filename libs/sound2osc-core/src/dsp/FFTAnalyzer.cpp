@@ -27,20 +27,18 @@
 FFTAnalyzer::FFTAnalyzer(const MonoAudioBuffer& buffer,QVector<TriggerGeneratorInterface*>& triggerContainer)
 	: m_inputBuffer(buffer)
 	, m_triggerContainer(triggerContainer)
-	, m_fft(nullptr)
 	, m_buffer(NUM_SAMPLES)
 	, m_window(NUM_SAMPLES)
 	, m_fftOutput(NUM_SAMPLES)
 	, m_linearSpectrum(NUM_SAMPLES / 2)
 	, m_scaledSpectrum(SCALED_SPECTRUM_BASE_FREQ, SCALED_SPECTRUM_LENGTH)
 {
-	m_fft = new FFTRealWrapper<NUM_SAMPLES_EXPONENT>();
+	m_fft = std::make_unique<FFTRealWrapper<NUM_SAMPLES_EXPONENT>>();
 	calculateWindow();
 }
 
 FFTAnalyzer::~FFTAnalyzer()
 {
-	delete m_fft;
 }
 
 void FFTAnalyzer::calculateWindow()

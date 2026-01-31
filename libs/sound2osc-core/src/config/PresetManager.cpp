@@ -6,13 +6,15 @@
 #include <sound2osc/logging/Logger.h>
 #include <sound2osc/core/versionInfo.h>
 
-#include <QFile>
-#include <QDir>
 #include <QFileInfo>
 #include <QSettings>
 #include <QDateTime>
 #include <QJsonDocument>
 #include <QJsonArray>
+
+#include <filesystem>
+#include <fstream>
+#include <sstream>
 
 namespace sound2osc {
 
@@ -28,10 +30,14 @@ PresetManager::PresetManager(const QString& presetDir, QObject* parent)
     , m_presetDir(presetDir)
 {
     // Ensure preset directory exists
-    QDir dir(m_presetDir);
-    if (!dir.exists()) {
-        dir.mkpath(".");
-        Logger::info("Created preset directory: %1", m_presetDir);
+    std::filesystem::path dir(m_presetDir.toStdString());
+    try {
+        if (!std::filesystem::exists(dir)) {
+            std::filesystem::create_directories(dir);
+            Logger::info("Created preset directory: %1", m_presetDir);
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        Logger::error("Failed to create preset directory: %1", QString::fromStdString(e.what()));
     }
 }
 
@@ -48,16 +54,20 @@ QJsonObject PresetManager::loadPresetFile(const QString& fileName)
         return state;
     }
     
-    QFile file(cleanPath);
-    if (!file.exists()) {
+    std::filesystem::path path(cleanPath.toStdString());
+    if (!std::filesystem::exists(path)) {
         Logger::warning("Preset file does not exist: %1", cleanPath);
         emit loadError(QString("Preset does not exist: %1").arg(cleanPath));
         return state;
     }
     
     // Check if file is JSON
-    if (file.open(QIODevice::ReadOnly)) {
-        QByteArray data = file.readAll();
+    std::ifstream file(path);
+    if (file.is_open()) {
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        std::string content = buffer.str();
+        QByteArray data = QByteArray::fromStdString(content);
         file.close();
         
         QJsonParseError error;
@@ -99,14 +109,15 @@ bool PresetManager::savePresetFile(const QString& fileName, const QJsonObject& s
     finalState["formatVersion"] = CURRENT_FORMAT_VERSION;
     finalState["changedAt"] = QDateTime::currentDateTime().toString(Qt::ISODate);
     
-    QFile file(cleanPath);
-    if (!file.open(QIODevice::WriteOnly)) {
+    std::filesystem::path path(cleanPath.toStdString());
+    std::ofstream file(path);
+    if (!file.is_open()) {
         Logger::error("Failed to open file for writing: %1", cleanPath);
         return false;
     }
     
     QJsonDocument doc(finalState);
-    file.write(doc.toJson());
+    file << doc.toJson().toStdString();
     file.close();
     
     if (!isAutosave) {
@@ -197,27 +208,31 @@ QJsonObject PresetManager::convertLegacySettingsToJson(const QString& path)
 bool PresetManager::presetExists(const QString& fileName) const
 {
     QString cleanPath = cleanFilePath(fileName, false);
-    return QFile::exists(cleanPath);
+    return std::filesystem::exists(cleanPath.toStdString());
 }
 
 bool PresetManager::deletePreset(const QString& fileName)
 {
     QString cleanPath = cleanFilePath(fileName, false);
+    std::filesystem::path path(cleanPath.toStdString());
     
-    QFile file(cleanPath);
-    if (!file.exists()) {
+    if (!std::filesystem::exists(path)) {
         return false;
     }
     
-    if (file.remove()) {
-        Logger::info("Preset deleted: %1", cleanPath);
-        
-        // Clear current preset if it was the deleted one
-        if (m_currentPresetPath == cleanPath) {
-            clearCurrentPreset();
+    try {
+        if (std::filesystem::remove(path)) {
+            Logger::info("Preset deleted: %1", cleanPath);
+            
+            // Clear current preset if it was the deleted one
+            if (m_currentPresetPath == cleanPath) {
+                clearCurrentPreset();
+            }
+            
+            return true;
         }
-        
-        return true;
+    } catch (const std::filesystem::filesystem_error& e) {
+        Logger::error("Failed to delete preset: %1. Error: %2", cleanPath, QString::fromStdString(e.what()));
     }
     
     Logger::error("Failed to delete preset: %1", cleanPath);
@@ -226,17 +241,27 @@ bool PresetManager::deletePreset(const QString& fileName)
 
 QStringList PresetManager::listPresets() const
 {
-    QDir dir(m_presetDir);
-    QStringList filters;
-    filters << "*.s2o" << "*.s2l";
-    
-    QFileInfoList files = dir.entryInfoList(filters, QDir::Files, QDir::Name);
-    
     QStringList presets;
-    for (const QFileInfo& file : files) {
-        presets.append(file.absoluteFilePath());
+    std::filesystem::path dir(m_presetDir.toStdString());
+    
+    if (!std::filesystem::exists(dir) || !std::filesystem::is_directory(dir)) {
+        return presets;
     }
     
+    try {
+        for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+            if (entry.is_regular_file()) {
+                std::string ext = entry.path().extension().string();
+                if (ext == ".s2o" || ext == ".s2l") {
+                    presets.append(QString::fromStdString(entry.path().string()));
+                }
+            }
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        Logger::error("Failed to list presets: %1", QString::fromStdString(e.what()));
+    }
+    
+    std::sort(presets.begin(), presets.end());
     return presets;
 }
 
@@ -305,7 +330,7 @@ QString PresetManager::autosavePath() const
 QJsonObject PresetManager::loadAutosave()
 {
     QString path = autosavePath();
-    if (QFile::exists(path)) {
+    if (std::filesystem::exists(path.toStdString())) {
         return loadPresetFile(path);
     }
     return QJsonObject();

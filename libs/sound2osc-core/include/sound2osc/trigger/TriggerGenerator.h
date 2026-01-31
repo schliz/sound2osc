@@ -33,6 +33,8 @@
 #include <QDebug>
 #include <QJsonObject>
 
+#include <atomic>
+
 
 // Forward declaration to reduce dependencies:
 class OSCNetworkManager;
@@ -96,7 +98,7 @@ public:
 	qreal getCurrentLevel() const { return m_lastValue; }
 
 	// checks if the max level within the frequency band is greater than the threshold
-    bool checkForTrigger(ScaledSpectrum& spectrum, bool forceRelease) override;
+    bool checkForTrigger(const ScaledSpectrum& spectrum, bool forceRelease) override;
 
 	// ---------------- Save and Restore ---------------
 
@@ -117,11 +119,11 @@ protected:
     const QString	m_name;  // name of the Trigger (used for save, restore and UI)
     OSCNetworkManager*	m_osc;  // pointer to OSCNetworkManager instance (i.e. of MainController)
 	const bool		m_invert;  // true if signal values should be inverted (i.e. for "silence" trigger)
-    bool            m_mute; // true if the band is muted, which will supress OSC Output
-	int				m_midFreq;  // middle frequency of bandpass in Hz
+    std::atomic<bool> m_mute; // true if the band is muted, which will supress OSC Output
+	std::atomic<int> m_midFreq;  // middle frequency of bandpass in Hz
 	const int		m_defaultMidFreq;  // default midFreq in Hz, used for reset
-	qreal			m_width;  // width of bandpass [0...1]
-	qreal			m_threshold;  // threshold for Trigger generation [0...1]
+	std::atomic<qreal> m_width;  // width of bandpass [0...1]
+	std::atomic<qreal> m_threshold;  // threshold for Trigger generation [0...1]
 	bool			m_isActive;  // true if value is above threshold
 	qreal			m_lastValue;  // last value (used to check if new level message should be sent)
 	TriggerOscParameters m_oscParameters;  // OSC parameter object (stores OSC messages)

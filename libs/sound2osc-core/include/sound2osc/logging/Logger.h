@@ -10,14 +10,13 @@
 
 #include <QString>
 #include <QMutex>
-#include <QFile>
-#include <QTextStream>
 #include <QDateTime>
-#include <QDir>
 #include <QStandardPaths>
 
 #include <functional>
 #include <memory>
+#include <filesystem>
+#include <fstream>
 
 namespace sound2osc {
 
@@ -246,8 +245,7 @@ private:
     QString m_format = "[%timestamp%] [%level%] %message%";
     QString m_appName = "sound2osc";
     
-    std::unique_ptr<QFile> m_logFile;
-    std::unique_ptr<QTextStream> m_logStream;
+    std::ofstream m_logFileStream;
     
     QVector<LogHandler> m_handlers;
     bool m_initialized = false;
