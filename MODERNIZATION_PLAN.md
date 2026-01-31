@@ -1,75 +1,60 @@
 # sound2osc Modernization Plan
 
-**Status:** Phase 4 (Quality Assurance) & Phase 5 (Refactoring) in progress.
-**Last Updated:** 2026-01-25
-
-This document outlines the remaining steps to complete the modernization of sound2osc. Phases 1-3 (Qt6 migration, Core separation, Headless app) are complete.
+This document outlines the remaining steps to achieve a fully modern, robust, and extensible architecture for sound2osc. The primary goal is to maintain a strict separation between the core signal processing logic and various frontend implementations while ensuring high code quality and testability.
 
 ---
 
-## Phase 4: Quality Assurance & Testing (Current Priority)
+## 1. Quality Assurance & Testing
 
-The current test suite covers infrastructure (Config, Logging, OSC) but lacks coverage for the core DSP and logic components.
+The current test suite covers basic infrastructure but needs more depth to ensure the reliability of the core DSP algorithms.
 
-### 4.1 Expand Unit Test Coverage
-- [ ] **DSP Testing** (`tests/unit/TestDSP.cpp`)
-    - Test `FFTAnalyzer` with known signal inputs (sine waves).
-    - Verify spectrum output matches expected frequencies.
-- [ ] **Trigger Logic** (`tests/unit/TestTrigger.cpp`)
-    - Test `TriggerGenerator` threshold logic.
-    - Test hysteresis and cooldown behaviors.
-- [ ] **BPM Detection** (`tests/unit/TestBPM.cpp`)
-    - Test `BPMDetector` with constant tempo signals.
-- [ ] **Audio Abstraction**
-    - Ensure `AudioInputInterface` behaves correctly with mock inputs.
-
-### 4.2 Integration Testing
-- [ ] Create `tests/integration/` suite.
-- [ ] Verify full pipeline (AudioBuffer -> FFT -> Trigger -> OSC) in a headless environment.
+- [ ] **DSP Verification** (`tests/unit/TestDSP.cpp`)
+    - Implement tests for `FFTAnalyzer` using known synthetic signals (sine, square, white noise).
+    - Verify that frequency bin alignment and energy calculation match mathematical expectations.
+- [ ] **Trigger Logic Depth** (`tests/unit/TestTrigger.cpp`)
+    - Validate `TriggerGenerator` behavior across edge cases (e.g., extremely low/high thresholds).
+    - Specifically test time-domain filtering: on/off delays, hysteresis, and cooldown behaviors.
+- [ ] **BPM Detection Stability** (`tests/unit/TestBPM.cpp`)
+    - Test `BPMDetector` with various constant and shifting tempo signals.
+    - Verify accuracy across a wide range of musical genres and beat patterns.
+- [ ] **Integration Testing**
+    - Create a suite in `tests/integration/` that validates the full pipeline: `AudioBuffer -> FFT -> Trigger -> OSC`.
+    - Ensure the system remains stable during long-running headless operations.
 
 ---
 
-## Phase 5: Architecture Refactoring (Critical)
+## 2. Modern C++ & Code Quality
 
-Currently, the business logic (wiring Audio to FFT to Triggers) is duplicated between `apps/gui/src/controllers/MainController.cpp` and `apps/headless/main.cpp`.
+Refining the codebase to leverage C++17/20 features and improve memory safety.
 
-### 5.1 Extract Core Engine
-- [x] **Create `Sound2OscEngine` class** in `libs/sound2osc-core`.
-    - Move wiring logic from `MainController` and `headless/main.cpp` into this class.
-    - Should own `AudioInput`, `FFTAnalyzer`, `TriggerGenerator`s, and `BPMDetector`.
-    - Should handle the main processing loop/timers.
-- [x] **Refactor Headless App**
-    - Replace raw component instantiation in `headless/main.cpp` with `Sound2OscEngine`.
-- [x] **Refactor GUI App**
-    - Update `MainController` to wrap `Sound2OscEngine` instead of managing individual components.
-    - `MainController` becomes strictly a bridge between QML and the Engine.
-
-### 5.2 Complete Configuration Migration
-- [x] **Finalize Settings Migration**
-    - Ensure `MainController` exclusively uses `SettingsManager` and `JsonConfigStore`.
-    - Remove any lingering `QSettings` usage for business logic.
-- [x] **Clean up TODOs**
-    - Restore view positions/geometry in GUI (currently marked as TODO).
-    - Restore trigger settings visibility (marked as TODO).
+- [ ] **Filesystem Migration**
+    - Replace legacy `QDir` and `QFile` usage with `std::filesystem` where appropriate to reduce dependency on Qt's I/O layer in the core library.
+- [ ] **Smart Pointer Migration**
+    - Eliminate remaining raw `new`/`delete` calls.
+    - Review `MainController` and GUI controllers to ensure proper use of `std::unique_ptr` and `std::shared_ptr`.
+- [ ] **Const Correctness & Thread Safety**
+    - Audit the hot paths (FFT/Trigger loops) for unnecessary copies and ensure thread-safe access to shared data buffers.
 
 ---
 
-## Phase 6: Future & Polish
+## 3. Portability & Performance
 
-### 6.1 Modern C++ Standards
-- [ ] Replace `QDir`/`QFile` with `std::filesystem` where appropriate (C++17).
-- [ ] Review raw pointer usage in `MainController` (replace with `std::unique_ptr`/`std::shared_ptr`).
+Increasing the flexibility of the core library for diverse deployment scenarios.
 
-### 6.2 Advanced Features
-- [ ] **Web UI Backend:** Implement WebSocket server in `apps/web-ui` (or core) to serve a React/Vue frontend.
-- [ ] **Audio Backends:** Implement non-Qt audio backends (e.g., pure ALSA or PulseAudio) for lighter headless deployments.
-- [ ] **Plugin System:** Allow custom trigger algorithms via shared libraries.
+- [ ] **Alternative Audio Backends**
+    - Implement non-Qt audio capture backends (e.g., pure PulseAudio, ALSA, or Miniaudio) to allow the headless application to run with minimal dependencies.
+- [ ] **Headless Optimization**
+    - Further optimize the `Sound2OscEngine` for low-latency operation on resource-constrained devices (e.g., Raspberry Pi Zero).
 
 ---
 
-## Completed Milestones (Reference)
+## 4. Advanced Architecture
 
-- **Phase 1:** Repository Cleanup & Build System (CMake/Ninja) ✅
-- **Phase 2:** Qt6 & C++17 Migration ✅
-- **Phase 3:** Architecture Refactoring (Headless App, Logger, ConfigStore) ✅
-- **CI/CD:** GitHub Actions for Linux/Windows/macOS ✅
+Future-proofing the application for new use cases.
+
+- [ ] **Web UI Backend**
+    - Implement a WebSocket server within the core library to serve real-time spectrum and trigger data to a browser-based frontend (React/Vue).
+- [ ] **Plugin System**
+    - Architect a system to load custom trigger algorithms via shared libraries/DLLs, allowing users to extend the analysis capabilities without recompiling the core.
+- [ ] **OSC Input Mapping**
+    - Expand the remote control capabilities to allow full runtime configuration of all engine parameters via incoming OSC messages.
