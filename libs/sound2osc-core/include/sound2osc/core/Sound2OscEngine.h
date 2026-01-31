@@ -56,6 +56,7 @@ public:
     
     OSCNetworkManager* osc() { return m_osc.get(); }
     QAudioInputWrapper* audioInput() { return m_audioInput.get(); }
+    MonoAudioBuffer* getAudioBuffer() { return m_audioBuffer.get(); }
     FFTAnalyzer* fft() { return m_fft.get(); }
     BPMDetector* bpm() { return m_bpmDetector.get(); }
     BPMOscControler* bpmOsc() { return m_bpmOsc.get(); }

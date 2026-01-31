@@ -59,6 +59,109 @@ private slots:
         
         QVERIFY2(triggered, "Trigger failed to fire on in-band signal");
     }
+
+    void testTimeDomainBehavior()
+    {
+        // 1. Setup
+        TriggerGenerator trigger("TestTrigger", nullptr, false, false); // Envelope trigger
+        trigger.setThreshold(0.5);
+        
+        // Configure Delays
+        // Use substantial delays to be robust against test timing jitters
+        double delayTime = 0.2; // 200ms
+        trigger.getTriggerFilter().setOnDelay(delayTime);
+        trigger.getTriggerFilter().setOffDelay(delayTime);
+        
+        // Spy on the filter signals
+        QSignalSpy spyOn(&trigger.getTriggerFilter(), &TriggerFilter::onSignalSent);
+        QSignalSpy spyOff(&trigger.getTriggerFilter(), &TriggerFilter::offSignalSent);
+        
+        QVERIFY(spyOn.isValid());
+        QVERIFY(spyOff.isValid());
+        
+        // 2. Setup Spectrum (Input)
+        ScaledSpectrum spectrum(20, 200);
+        QVector<float> strongSignal(2048, 100.0f); // High energy
+        QVector<float> silence(2048, 0.0f);
+        
+        spectrum.setGain(1.0f);
+        spectrum.setCompression(1.0f);
+        
+        // 3. Test On Delay
+        // Provide signal
+        spectrum.updateWithLinearSpectrum(strongSignal);
+        trigger.checkForTrigger(spectrum, false); // First detection
+        
+        // Should NOT be on yet due to delay
+        QCOMPARE(spyOn.count(), 0);
+        
+        // Wait half the delay
+        QTest::qWait(100); 
+        // Need to keep "poking" the generator? 
+        // No, TriggerFilter uses QTimer, independent of checkForTrigger loop once activated.
+        // However, TriggerGenerator::checkForTrigger calls filter.triggerOn() repeatedly.
+        // Let's verify if TriggerFilter handles re-triggering correctly (it should, usually restarting or ignoring timer).
+        // Actually, usually triggerOn() is idempotent or re-triggering logic depends on implementation.
+        // If it uses QTimer::start(), it resets the timer! This would be a bug if called every frame.
+        // Let's assume the implementation checks state.
+        
+        // Let's simulate the loop behavior (calling checkForTrigger continuously)
+        trigger.checkForTrigger(spectrum, false);
+        
+        QCOMPARE(spyOn.count(), 0); // Still waiting
+        
+        // Wait rest of delay + buffer
+        QTest::qWait(150);
+        
+        QCOMPARE(spyOn.count(), 1); // Should have fired
+        
+        // 4. Test Off Delay
+        // Remove signal
+        spectrum.updateWithLinearSpectrum(silence);
+        trigger.checkForTrigger(spectrum, false);
+        
+        QCOMPARE(spyOff.count(), 0); // Should be waiting
+        
+        QTest::qWait(100);
+        trigger.checkForTrigger(spectrum, false);
+        QCOMPARE(spyOff.count(), 0);
+        
+        QTest::qWait(150);
+        QCOMPARE(spyOff.count(), 1); // Should have released
+    }
+
+    void testExtremeThresholds()
+    {
+        TriggerGenerator trigger("TestTrigger", nullptr, false, false);
+        ScaledSpectrum spectrum(20, 200);
+        QVector<float> mediumSignal(2048, 5.0f); // Moderate signal
+        spectrum.updateWithLinearSpectrum(mediumSignal);
+        
+        // Threshold 0.0 -> Always Trigger
+        trigger.setThreshold(0.0);
+        bool fired = trigger.checkForTrigger(spectrum, false);
+        QVERIFY2(fired, "Threshold 0.0 should always fire");
+        
+        // Threshold 1.0 -> Never Trigger (unless signal is infinite/clipping max)
+        trigger.setThreshold(1.0);
+        QCOMPARE(trigger.getThreshold(), 1.0);
+        
+        // Ensure signal is small enough and AGC is OFF
+        spectrum.setAgcEnabled(false);
+
+        spectrum.setGain(0.1f); 
+        
+        // Use a very weak signal
+        QVector<float> weakSignal(2048, 0.01f);
+        spectrum.updateWithLinearSpectrum(weakSignal);
+        
+        qDebug() << "Level:" << trigger.getCurrentLevel() << "Threshold:" << trigger.getThreshold();
+
+        fired = trigger.checkForTrigger(spectrum, false);
+        qDebug() << "After Check - Level:" << trigger.getCurrentLevel() << "Fired:" << fired;
+
+        QVERIFY2(!fired, "Threshold 1.0 should not fire with weak signal and AGC off");
+    }
 };
 
 QTEST_GUILESS_MAIN(TestTrigger)
