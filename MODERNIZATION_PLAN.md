@@ -8,16 +8,16 @@ This document outlines the remaining steps to achieve a fully modern, robust, an
 
 The current test suite covers basic infrastructure but needs more depth to ensure the reliability of the core DSP algorithms.
 
-- [ ] **DSP Verification** (`tests/unit/TestDSP.cpp`)
+- [x] **DSP Verification** (`tests/unit/TestDSP.cpp`)
     - Implement tests for `FFTAnalyzer` using known synthetic signals (sine, square, white noise).
     - Verify that frequency bin alignment and energy calculation match mathematical expectations.
-- [ ] **Trigger Logic Depth** (`tests/unit/TestTrigger.cpp`)
+- [x] **Trigger Logic Depth** (`tests/unit/TestTrigger.cpp`)
     - Validate `TriggerGenerator` behavior across edge cases (e.g., extremely low/high thresholds).
     - Specifically test time-domain filtering: on/off delays, hysteresis, and cooldown behaviors.
-- [ ] **BPM Detection Stability** (`tests/unit/TestBPM.cpp`)
+- [x] **BPM Detection Stability** (`tests/unit/TestBPM.cpp`)
     - Test `BPMDetector` with various constant and shifting tempo signals.
     - Verify accuracy across a wide range of musical genres and beat patterns.
-- [ ] **Integration Testing**
+- [x] **Integration Testing**
     - Create a suite in `tests/integration/` that validates the full pipeline: `AudioBuffer -> FFT -> Trigger -> OSC`.
     - Ensure the system remains stable during long-running headless operations.
 

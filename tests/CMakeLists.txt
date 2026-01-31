@@ -20,3 +20,7 @@ add_sound2osc_test(TestAppInfo unit/TestAppInfo.cpp)
 add_sound2osc_test(TestDSP unit/TestDSP.cpp)
 add_sound2osc_test(TestTrigger unit/TestTrigger.cpp)
 add_sound2osc_test(TestBPM unit/TestBPM.cpp)
+
+# Integration Tests
+add_sound2osc_test(TestPipeline integration/TestPipeline.cpp)
+target_link_libraries(TestPipeline PRIVATE Qt6::Network)
