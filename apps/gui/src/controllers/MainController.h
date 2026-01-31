@@ -357,12 +357,12 @@ private slots:
 	void onConnectedChanged();
 
 public:  // to allow access from OSCMapping class without getters
-	TriggerGuiController* m_bassController;  // GUI Controller for Bass TriggerGenerator
-	TriggerGuiController* m_loMidController;  // GUI Controller for LoMid TriggerGenerator
-	TriggerGuiController* m_hiMidController;  // GUI Controller for HiMid TriggerGenerator
-	TriggerGuiController* m_highController;  // GUI Controller for High TriggerGenerator
-    TriggerGuiController* m_envelopeController;  // GUI Controller for Level TriggerGenerator
-	TriggerGuiController* m_silenceController;  // GUI Controller for Silence TriggerGenerator
+	std::unique_ptr<TriggerGuiController> m_bassController;  // GUI Controller for Bass TriggerGenerator
+	std::unique_ptr<TriggerGuiController> m_loMidController;  // GUI Controller for LoMid TriggerGenerator
+	std::unique_ptr<TriggerGuiController> m_hiMidController;  // GUI Controller for HiMid TriggerGenerator
+	std::unique_ptr<TriggerGuiController> m_highController;  // GUI Controller for High TriggerGenerator
+    std::unique_ptr<TriggerGuiController> m_envelopeController;  // GUI Controller for Level TriggerGenerator
+	std::unique_ptr<TriggerGuiController> m_silenceController;  // GUI Controller for Silence TriggerGenerator
 
 protected:
     std::unique_ptr<sound2osc::Sound2OscEngine> m_engine;

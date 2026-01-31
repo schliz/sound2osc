@@ -90,7 +90,7 @@ public:
 
 	// Scales the incoming linear spectrum to a logarithmic spectrum.
 	// Results will be written in dbSpectrum and normSpectrum.
-	void updateWithLinearSpectrum(const QVector<float> linearSpectrum);
+	void updateWithLinearSpectrum(const QVector<float>& linearSpectrum);
 
 	// returns a normalized spectrum (energy value from 0 to 1)
 	// This spectrum is scaled by both factor and exponent.

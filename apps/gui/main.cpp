@@ -86,10 +86,10 @@ int main(int argc, char *argv[]) {
 
 	// create QmlEngine and MainController:
 	QQmlApplicationEngine engine;
-    MainController* controller = new MainController(&engine, settingsManager, presetManager.get());
+    auto controller = std::make_unique<MainController>(&engine, settingsManager, presetManager.get());
 
 	// set global QML variable "controller" to a pointer to the MainController:
-    engine.rootContext()->setContextProperty("controller", controller);
+    engine.rootContext()->setContextProperty("controller", controller.get());
     
     // Expose AppInfo to QML for branding
     engine.rootContext()->setContextProperty("appVersion", AppInfo::applicationVersion());
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
 	// quit QGuiApplication when quit signal is emitted:
 	QObject::connect(&engine, &QQmlApplicationEngine::quit, &app, &QCoreApplication::quit);
 	// call onExit() method of controller when app is about to quit:
-    QObject::connect(&app, &QCoreApplication::aboutToQuit, controller, &MainController::onExit);
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, controller.get(), &MainController::onExit);
 
     controller->initBeforeQmlIsLoaded();
 	engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));

@@ -11,10 +11,10 @@ This document provides structured information for AI agents and automated tools 
 ### Project Essentials
 
 - **Project Type:** Qt6 C++17 audio analysis and OSC protocol application
-- **Architecture:** Modular core library + GUI/CLI frontends
+- **Architecture:** Modular core library (swappable audio backend) + GUI/CLI frontends
 - **Build System:** CMake 3.23+
 - **Target:** Linux, Windows, macOS (Phase 4: CI/CD in progress)
-- **Status:** Feature-complete, Phase 3 done, Phase 4 starting
+- **Status:** Feature-complete, Portability phase in progress
 
 ---
 
@@ -25,12 +25,13 @@ These rules are INVIOLABLE. Violations break the entire architecture:
 ### 1.1 Core Library Independence (CRITICAL)
 ```
 ✅ ALLOWED in /libs/sound2osc-core/:
-  - Qt6::Core, Qt6::Network, Qt6::Multimedia
+  - Qt6::Core, Qt6::Network
+  - Qt6::Multimedia (ONLY if using Qt audio backend)
   - Standard library (C++17)
-  - Third-party libraries (libfftw3)
+  - Third-party libraries (libfftw3, miniaudio)
   
 ❌ FORBIDDEN in /libs/sound2osc-core/:
-  - Qt6::Gui, Qt6::Quick, Qt6::Widgets
+  - Qt6::Gui, Qt6::Quick, Qt6::Widgets (Violations fixed in BPMDetector)
   - Any UI-related classes or functions
   - Direct file I/O (use Logger for logging)
   - GUI-specific configuration (e.g., QSettings)
@@ -119,7 +120,7 @@ Quick file location guide:
 ### Public API Headers (Don't break these)
 ```
 libs/sound2osc-core/include/sound2osc/
-├── audio/            [AudioCapture, AudioBuffer, AudioDevice]
+├── audio/            [AudioInputInterface, MiniaudioInputWrapper, QAudioInputWrapper]
 ├── dsp/              [FFTAnalyzer, Spectrum, SpectrumBuffer]
 ├── trigger/          [TriggerGenerator, TriggerEvent]
 ├── bpm/              [BPMDetector, BeatInfo]
@@ -132,7 +133,8 @@ libs/sound2osc-core/include/sound2osc/
 ### Implementation Files (Safe to modify)
 ```
 libs/sound2osc-core/src/
-├── AudioCapture.cpp          [Audio input, device enumeration]
+├── MiniaudioInputWrapper.cpp [Miniaudio backend implementation]
+├── QAudioInputWrapper.cpp    [Qt Multimedia backend implementation]
 ├── FFTAnalyzer.cpp           [Real-time FFT, spectrum analysis]
 ├── TriggerGenerator.cpp       [Trigger detection algorithms]
 ├── BPMDetector.cpp           [Beat detection]
@@ -160,6 +162,7 @@ CMakeLists.txt                 [Root build config]
 MODERNIZATION_PLAN.md          [Architecture decisions, roadmap]
 CONTRIBUTING.md                [Human-facing developer guide]
 README.md                      [User-facing overview]
+docs/BUILD.md                  [Detailed build instructions]
 ```
 
 ---

@@ -13,7 +13,7 @@
 #include <memory>
 
 #include <sound2osc/audio/MonoAudioBuffer.h>
-#include <sound2osc/audio/QAudioInputWrapper.h>
+#include <sound2osc/audio/AudioInputInterface.h>
 #include <sound2osc/dsp/FFTAnalyzer.h>
 #include <sound2osc/osc/OSCNetworkManager.h>
 #include <sound2osc/bpm/BPMDetector.h>
@@ -22,7 +22,10 @@
 #include <sound2osc/config/ConfigStore.h>
 #include <sound2osc/config/SettingsManager.h>
 
+#include <atomic>
+
 namespace sound2osc {
+// class QAudioInputWrapper; // Removed as we use the interface base class
 
 /**
  * @brief The central engine that orchestrates audio analysis and OSC generation.
@@ -55,7 +58,7 @@ public:
     // -- Component Accessors --
     
     OSCNetworkManager* osc() { return m_osc.get(); }
-    QAudioInputWrapper* audioInput() { return m_audioInput.get(); }
+    AudioInputInterface* audioInput() { return m_audioInput.get(); }
     MonoAudioBuffer* getAudioBuffer() { return m_audioBuffer.get(); }
     FFTAnalyzer* fft() { return m_fft.get(); }
     BPMDetector* bpm() { return m_bpmDetector.get(); }
@@ -101,15 +104,17 @@ private slots:
 private:
     void initializeComponents();
     void connectComponents();
+    void onAudioProcessed(int count);
 
     bool m_running;
     bool m_lowSoloMode;
+    std::atomic<int> m_accumulatedSamples{0};
 
     std::shared_ptr<SettingsManager> m_settings;
 
     // Components
     std::unique_ptr<MonoAudioBuffer> m_audioBuffer;
-    std::unique_ptr<QAudioInputWrapper> m_audioInput;
+    std::unique_ptr<AudioInputInterface> m_audioInput;
     std::unique_ptr<OSCNetworkManager> m_osc;
     std::unique_ptr<BPMOscControler> m_bpmOsc;
     std::unique_ptr<BPMDetector> m_bpmDetector;
@@ -128,7 +133,7 @@ private:
     std::unique_ptr<FFTAnalyzer> m_fft;
 
     // Timers
-    QTimer m_fftTimer;
+    // QTimer m_fftTimer; // Removed in favor of event-driven loop
     QTimer m_bpmTimer;
     QTimer m_statusTimer;
 };

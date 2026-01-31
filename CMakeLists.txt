@@ -14,6 +14,9 @@ option(SOUND2OSC_BUILD_HEADLESS "Build the headless CLI application" OFF)
 option(SOUND2OSC_BUILD_TESTS "Build unit tests" OFF)
 option(SOUND2OSC_ENABLE_COVERAGE "Enable code coverage generation" OFF)
 
+set(SOUND2OSC_AUDIO_BACKEND "Qt" CACHE STRING "Audio backend to use (Qt, Miniaudio)")
+set_property(CACHE SOUND2OSC_AUDIO_BACKEND PROPERTY STRINGS "Qt" "Miniaudio")
+
 # -----------------------------------------------------------------------------
 # Global settings
 # -----------------------------------------------------------------------------

@@ -26,7 +26,6 @@
 #include <sound2osc/core/QCircularBuffer.h>
 
 #include <QTime>
-#include <QColor>
 
 #include <list>
 
@@ -398,13 +397,13 @@ void BPMDetector::updateSpectralFluxes(const int fromIndex)
     }
 
     if (max > 0 && !m_waveColors.isEmpty()) {
-        col[0] = col[0] * 128 / max + m_waveColors.last().red() / 2;
-        col[1] = col[1] * 128 / max + m_waveColors.last().green() / 2;
-        col[2] = col[2] * 128 / max + m_waveColors.last().blue() / 2;
+        col[0] = col[0] * 128 / max + m_waveColors.last().r / 2;
+        col[1] = col[1] * 128 / max + m_waveColors.last().g / 2;
+        col[2] = col[2] * 128 / max + m_waveColors.last().b / 2;
     }
 
     // Store the value
-    m_waveColors.push_back(QColor(col[0],col[1],col[2]));
+    m_waveColors.push_back({col[0],col[1],col[2]});
 }
 
 // finds onsets in the audio material
