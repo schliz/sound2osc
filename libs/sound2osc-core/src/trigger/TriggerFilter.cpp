@@ -103,6 +103,22 @@ void TriggerFilter::restore(const QString name, QSettings &settings)
 	setMaxHold(settings.value(name + "/maxHold").toReal());
 }
 
+QJsonObject TriggerFilter::toState() const
+{
+    QJsonObject state;
+    state["onDelay"] = m_onDelay;
+    state["offDelay"] = m_offDelay;
+    state["maxHold"] = m_maxHold;
+    return state;
+}
+
+void TriggerFilter::fromState(const QJsonObject& state)
+{
+    setOnDelay(state["onDelay"].toDouble(0.0));
+    setOffDelay(state["offDelay"].toDouble(0.0));
+    setMaxHold(state["maxHold"].toDouble(0.0));
+}
+
 void TriggerFilter::onOnDelayEnd()
 {
 	Q_ASSERT(!m_outputIsActive);

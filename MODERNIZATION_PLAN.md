@@ -45,10 +45,10 @@ Currently, the business logic (wiring Audio to FFT to Triggers) is duplicated be
     - `MainController` becomes strictly a bridge between QML and the Engine.
 
 ### 5.2 Complete Configuration Migration
-- [ ] **Finalize Settings Migration**
+- [x] **Finalize Settings Migration**
     - Ensure `MainController` exclusively uses `SettingsManager` and `JsonConfigStore`.
     - Remove any lingering `QSettings` usage for business logic.
-- [ ] **Clean up TODOs**
+- [x] **Clean up TODOs**
     - Restore view positions/geometry in GUI (currently marked as TODO).
     - Restore trigger settings visibility (marked as TODO).
 

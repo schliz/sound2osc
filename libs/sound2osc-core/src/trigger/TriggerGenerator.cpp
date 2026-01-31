@@ -26,6 +26,7 @@
 
 #include <QSettings>
 #include <QtMath>
+#include <QJsonObject>
 
 TriggerGenerator::TriggerGenerator(QString name, OSCNetworkManager* osc, bool isBandpass, bool invert, int midFreq)
     : TriggerGeneratorInterface(isBandpass)
@@ -115,6 +116,34 @@ void TriggerGenerator::restore(QSettings& settings)
 	setWidth(settings.value(m_name + "/width").toReal());
 	m_filter.restore(m_name, settings);
     m_oscParameters.restore(m_name, settings);
+}
+
+QJsonObject TriggerGenerator::toState() const
+{
+    QJsonObject state;
+    state["mute"] = m_mute;
+    state["threshold"] = m_threshold;
+    state["midFreq"] = m_midFreq;
+    state["width"] = m_width;
+    state["filter"] = m_filter.toState();
+    state["osc"] = m_oscParameters.toState();
+    return state;
+}
+
+void TriggerGenerator::fromState(const QJsonObject& state)
+{
+    m_mute = state["mute"].toBool(false);
+    setThreshold(state["threshold"].toDouble(0.5));
+    setMidFreq(state["midFreq"].toInt(1000));
+    setWidth(state["width"].toDouble(0.1));
+    
+    if (state.contains("filter")) {
+        m_filter.fromState(state["filter"].toObject());
+    }
+    
+    if (state.contains("osc")) {
+        m_oscParameters.fromState(state["osc"].toObject());
+    }
 }
 
 void TriggerGenerator::resetParameters()

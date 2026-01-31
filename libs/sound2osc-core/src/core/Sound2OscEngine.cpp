@@ -4,6 +4,7 @@
 #include <sound2osc/core/Sound2OscEngine.h>
 #include <sound2osc/logging/Logger.h>
 #include <sound2osc/dsp/FFTAnalyzer.h>
+#include <QJsonArray>
 
 namespace sound2osc {
 
@@ -150,6 +151,79 @@ void Sound2OscEngine::onStatusTimer()
 void Sound2OscEngine::setLowSoloMode(bool enabled)
 {
     m_lowSoloMode = enabled;
+}
+
+QJsonObject Sound2OscEngine::toState() const
+{
+    QJsonObject state;
+    
+    // Global Settings
+    state["lowSoloMode"] = m_lowSoloMode;
+    
+    // DSP Settings
+    QJsonObject dsp;
+    dsp["gain"] = m_fft->getScaledSpectrum().getGain();
+    dsp["compression"] = m_fft->getScaledSpectrum().getCompression();
+    dsp["decibel"] = m_fft->getScaledSpectrum().getDecibelConversion();
+    dsp["agc"] = m_fft->getScaledSpectrum().getAgcEnabled();
+    state["dsp"] = dsp;
+    
+    // BPM Settings
+    QJsonObject bpm;
+    bpm["min"] = m_bpmDetector->getMinBPM();
+    bpm["mute"] = m_bpmOsc->getBPMMute();
+    bpm["osc"] = m_bpmOsc->toState();
+    state["bpm"] = bpm;
+    
+    // Triggers
+    QJsonObject triggers;
+    triggers["bass"] = m_bass->toState();
+    triggers["loMid"] = m_loMid->toState();
+    triggers["hiMid"] = m_hiMid->toState();
+    triggers["high"] = m_high->toState();
+    triggers["envelope"] = m_envelope->toState();
+    triggers["silence"] = m_silence->toState();
+    state["triggers"] = triggers;
+    
+    return state;
+}
+
+void Sound2OscEngine::fromState(const QJsonObject& state)
+{
+    // Global Settings
+    if (state.contains("lowSoloMode")) {
+        m_lowSoloMode = state["lowSoloMode"].toBool();
+    }
+    
+    // DSP Settings
+    if (state.contains("dsp")) {
+        QJsonObject dsp = state["dsp"].toObject();
+        m_fft->getScaledSpectrum().setGain(dsp["gain"].toDouble(1.0));
+        m_fft->getScaledSpectrum().setCompression(dsp["compression"].toDouble(1.0));
+        m_fft->getScaledSpectrum().setDecibelConversion(dsp["decibel"].toBool(false));
+        m_fft->getScaledSpectrum().setAgcEnabled(dsp["agc"].toBool(true));
+    }
+    
+    // BPM Settings
+    if (state.contains("bpm")) {
+        QJsonObject bpm = state["bpm"].toObject();
+        m_bpmDetector->setMinBPM(bpm["min"].toInt(75));
+        m_bpmOsc->setBPMMute(bpm["mute"].toBool(false));
+        if (bpm.contains("osc")) {
+            m_bpmOsc->fromState(bpm["osc"].toObject());
+        }
+    }
+    
+    // Triggers
+    if (state.contains("triggers")) {
+        QJsonObject triggers = state["triggers"].toObject();
+        if (triggers.contains("bass")) m_bass->fromState(triggers["bass"].toObject());
+        if (triggers.contains("loMid")) m_loMid->fromState(triggers["loMid"].toObject());
+        if (triggers.contains("hiMid")) m_hiMid->fromState(triggers["hiMid"].toObject());
+        if (triggers.contains("high")) m_high->fromState(triggers["high"].toObject());
+        if (triggers.contains("envelope")) m_envelope->fromState(triggers["envelope"].toObject());
+        if (triggers.contains("silence")) m_silence->fromState(triggers["silence"].toObject());
+    }
 }
 
 } // namespace sound2osc

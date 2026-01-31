@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2016 Electronic Theatre Controls, Inc.
 // Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
-// SPDX-License-Identifier: MIT
 //
 // Preset management for sound2osc
 
@@ -18,60 +17,10 @@ namespace sound2osc {
 class IConfigStore;
 
 /**
- * @brief Data structure for preset settings
- * 
- * Contains all values that make up a preset, independent of
- * the trigger generators and other components.
- */
-struct PresetData {
-    // FFT/DSP settings
-    bool decibelConversion = false;
-    double fftGain = 1.0;
-    double fftCompression = 1.0;
-    bool agcEnabled = true;
-    
-    // UI settings
-    bool lowSoloMode = false;
-    bool waveformVisible = true;
-    QString consoleType = "Eos";
-    
-    // BPM settings
-    bool bpmActive = false;
-    bool autoBpm = false;
-    int minBpm = 75;
-    int tapBpm = 60;
-    bool bpmMute = false;
-    QStringList bpmOscCommands;
-    
-    // Metadata
-    QString version;
-    int formatVersion = 0;
-    QString changedAt;
-    
-    /**
-     * @brief Convert to JSON representation
-     */
-    QJsonObject toJson() const;
-    
-    /**
-     * @brief Load from JSON representation
-     * @param json JSON object containing preset data
-     * @return true if successful
-     */
-    bool fromJson(const QJsonObject& json);
-    
-    /**
-     * @brief Reset to default values
-     */
-    void reset();
-};
-
-/**
  * @brief Manages preset loading, saving, and listing
  * 
  * This class handles preset persistence and provides a clean API
- * for preset management. It does NOT directly modify trigger generators
- * or other components - that responsibility remains with MainController.
+ * for preset management.
  * 
  * Thread-safe: All public methods can be called from any thread.
  */
@@ -98,18 +47,18 @@ public:
     /**
      * @brief Load preset data from file
      * @param fileName Path to preset file (can have file:// prefix)
-     * @return PresetData struct with loaded values, or default if failed
+     * @return QJsonObject with loaded values, or empty if failed
      */
-    PresetData loadPresetFile(const QString& fileName);
+    QJsonObject loadPresetFile(const QString& fileName);
 
     /**
      * @brief Save preset data to file
      * @param fileName Path to preset file
-     * @param data Preset data to save
+     * @param state Preset data to save (from Sound2OscEngine::toState)
      * @param isAutosave If true, doesn't update current preset name
      * @return true if save succeeded
      */
-    bool savePresetFile(const QString& fileName, const PresetData& data, bool isAutosave = false);
+    bool savePresetFile(const QString& fileName, const QJsonObject& state, bool isAutosave = false);
 
     /**
      * @brief Check if a preset file exists
@@ -186,15 +135,15 @@ public:
 
     /**
      * @brief Load autosave file
-     * @return PresetData from autosave, or defaults if not found
+     * @return QJsonObject from autosave, or empty if not found
      */
-    PresetData loadAutosave();
+    QJsonObject loadAutosave();
 
     /**
      * @brief Save to autosave file
-     * @param data Preset data to save
+     * @param state Preset data to save
      */
-    void saveAutosave(const PresetData& data);
+    void saveAutosave(const QJsonObject& state);
 
     // =========================================================================
     // Utility methods
@@ -203,7 +152,7 @@ public:
     /**
      * @brief Clean up file path (remove file:// prefix, add extension)
      * @param rawPath Raw path from file dialog or OSC
-     * @param addExtension Whether to add .s2l extension if missing
+     * @param addExtension Whether to add .s2o extension if missing
      * @return Cleaned path
      */
     static QString cleanFilePath(const QString& rawPath, bool addExtension = true);
@@ -248,6 +197,9 @@ private:
     QString m_presetDir;
     QString m_currentPresetPath;
     bool m_hasUnsavedChanges = false;
+    
+    // Internal helper to convert legacy INI settings to JSON state
+    QJsonObject convertLegacySettingsToJson(const QString& path);
 };
 
 } // namespace sound2osc

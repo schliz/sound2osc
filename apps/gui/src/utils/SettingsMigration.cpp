@@ -16,6 +16,8 @@
 #include <QFileInfo>
 #include <QStandardPaths>
 #include <QDateTime>
+#include <QJsonObject>
+#include <QJsonArray>
 
 namespace sound2osc {
 
@@ -205,35 +207,80 @@ bool SettingsMigration::migratePresets(PresetManager* presetManager)
             continue;
         }
         
-        // Create PresetData from legacy values
-        PresetData data;
-        data.decibelConversion = legacyPreset.value("dbConversion", false).toBool();
-        data.fftGain = legacyPreset.value("fftGain", 1.0).toDouble();
-        data.fftCompression = legacyPreset.value("fftCompression", 1.0).toDouble();
-        data.agcEnabled = legacyPreset.value("agcEnabled", true).toBool();
-        data.consoleType = legacyPreset.value("consoleType", "Eos").toString();
-        data.lowSoloMode = legacyPreset.value("lowSoloMode", false).toBool();
-        data.bpmActive = legacyPreset.value("bpm/Active", false).toBool();
-        data.autoBpm = legacyPreset.value("autoBpm", false).toBool();
-        data.waveformVisible = legacyPreset.value("waveformVisible", true).toBool();
-        data.minBpm = legacyPreset.value("bpm/Min", 75).toInt();
-        data.tapBpm = legacyPreset.value("bpm/tapvalue", 60).toInt();
-        data.bpmMute = legacyPreset.value("bpm/mute", false).toBool();
-        data.version = legacyPreset.value("version").toString();
-        data.formatVersion = formatVersion;
-        data.changedAt = legacyPreset.value("changedAt").toString();
+        // Create JSON Object from legacy values
+        QJsonObject state;
         
-        // BPM OSC commands
+        // Global
+        state["lowSoloMode"] = legacyPreset.value("lowSoloMode", false).toBool();
+        
+        // DSP
+        QJsonObject dsp;
+        dsp["decibel"] = legacyPreset.value("dbConversion", false).toBool();
+        dsp["gain"] = legacyPreset.value("fftGain", 1.0).toDouble();
+        dsp["compression"] = legacyPreset.value("fftCompression", 1.0).toDouble();
+        dsp["agc"] = legacyPreset.value("agcEnabled", true).toBool();
+        state["dsp"] = dsp;
+        
+        // BPM
+        QJsonObject bpm;
+        bpm["active"] = legacyPreset.value("bpm/Active", false).toBool();
+        bpm["auto"] = legacyPreset.value("autoBpm", false).toBool();
+        bpm["min"] = legacyPreset.value("bpm/Min", 75).toInt();
+        bpm["tapValue"] = legacyPreset.value("bpm/tapvalue", 60).toInt();
+        bpm["mute"] = legacyPreset.value("bpm/mute", false).toBool();
+        
+        QJsonObject bpmOsc;
+        QJsonArray commands;
+        // Legacy BPM OSC commands were sometimes stored weirdly, but usually:
+        // bpm/on and bpm/off
         QString bpmOnCommand = legacyPreset.value("bpm/on").toString();
         QString bpmOffCommand = legacyPreset.value("bpm/off").toString();
-        if (!bpmOnCommand.isEmpty() || !bpmOffCommand.isEmpty()) {
-            data.bpmOscCommands.append(bpmOnCommand);
-            data.bpmOscCommands.append(bpmOffCommand);
+        if (!bpmOnCommand.isEmpty()) commands.append(bpmOnCommand);
+        if (!bpmOffCommand.isEmpty()) commands.append(bpmOffCommand);
+        
+        // Also check if there are newer list based commands
+        int count = legacyPreset.value("bpm/osc/count", 0).toInt();
+        for (int i = 0; i < count; ++i) {
+            commands.append(legacyPreset.value("bpm/osc/" + QString::number(i)).toString());
         }
+        
+        bpmOsc["commands"] = commands;
+        bpm["osc"] = bpmOsc;
+        state["bpm"] = bpm;
+        
+        // Triggers
+        QJsonObject triggers;
+        QStringList names = {"bass", "loMid", "hiMid", "high", "envelope", "silence"};
+        
+        for (const QString& name : names) {
+            QJsonObject trigger;
+            trigger["mute"] = legacyPreset.value(name + "/mute").toBool();
+            trigger["threshold"] = legacyPreset.value(name + "/threshold").toDouble();
+            trigger["midFreq"] = legacyPreset.value(name + "/midFreq").toInt();
+            trigger["width"] = legacyPreset.value(name + "/width").toDouble();
+            
+            QJsonObject filter;
+            filter["onDelay"] = legacyPreset.value(name + "/onDelay").toDouble();
+            filter["offDelay"] = legacyPreset.value(name + "/offDelay").toDouble();
+            filter["maxHold"] = legacyPreset.value(name + "/maxHold").toDouble();
+            trigger["filter"] = filter;
+            
+            QJsonObject osc;
+            osc["onMessage"] = legacyPreset.value(name + "/osc/onMessage").toString();
+            osc["offMessage"] = legacyPreset.value(name + "/osc/offMessage").toString();
+            osc["levelMessage"] = legacyPreset.value(name + "/osc/levelMessage").toString();
+            osc["minLevelValue"] = legacyPreset.value(name + "/osc/minLevelValue").toDouble();
+            osc["maxLevelValue"] = legacyPreset.value(name + "/osc/maxLevelValue").toDouble();
+            osc["labelText"] = legacyPreset.value(name + "/osc/labelText").toString();
+            trigger["osc"] = osc;
+            
+            triggers[name] = trigger;
+        }
+        state["triggers"] = triggers;
         
         // Save as JSON preset (keeping same filename)
         QString jsonPath = filePath;  // Keep .s2l extension, PresetManager will handle format
-        if (presetManager->savePresetFile(jsonPath, data)) {
+        if (presetManager->savePresetFile(jsonPath, state)) {
             successCount++;
             Logger::debug(QString("Migrated preset: %1").arg(fileInfo.fileName()));
         } else {
