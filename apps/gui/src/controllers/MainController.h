@@ -23,12 +23,8 @@
 #ifndef MAINCONTROLLER_H
 #define MAINCONTROLLER_H
 
-#include <sound2osc/dsp/FFTAnalyzer.h>
-#include <sound2osc/bpm/BPMDetector.h>
+#include <sound2osc/core/Sound2OscEngine.h>
 #include <sound2osc/bpm/BPMTapDetector.h>
-#include <sound2osc/audio/MonoAudioBuffer.h>
-#include <sound2osc/audio/AudioInputInterface.h>
-#include <sound2osc/osc/OSCNetworkManager.h>
 #include <sound2osc/core/versionInfo.h>
 #include <sound2osc/config/SettingsManager.h>
 #include <sound2osc/config/PresetManager.h>
@@ -48,9 +44,6 @@
 
 #include <iostream>
 
-// Rate to calculate the FFT (and Trigger signals) in Hz / FPS
-static const int FFT_UPDATE_RATE = 44; // Hz
-
 // Rate to send OSC Level Feedback (if activated) in Hz / FPS
 static const int OSC_LEVEL_FEEDBACK_RATE = 15; // Hz
 
@@ -62,13 +55,9 @@ class TriggerGuiController;
 class EnvelopeTriggerGuiController;
 
 
-// Processing chains in this software:
-// 1. Chain:  AudioInput (async) -> MonoAudioBuffer
-// 2. Chain:  QTimer(44Hz) -> FFTAnalyzer -> TriggerGenerator -> TriggerFilter -> OSCNetworkManager
-
-
 // This class coordinates the communication of Model and GUI,
 // initializes the objects and manages presets and persistence.
+// It wraps the Sound2OscEngine and exposes its functionality to QML.
 class MainController : public QObject
 {
 	Q_OBJECT
@@ -177,12 +166,6 @@ public slots:
 	// restores the window size and position
 	void restoreWindowGeometry();
 
-    // update function passed to the FFTAnalyzer
-    void updateFFT() { m_fft.calculateFFT(m_lowSoloMode); }
-
-    // update function passed to the BPMDetector
-    void updateBPM() { m_bpm.detectBPM(); }
-
 	// ------------------- Presets --------------------------------
 
 	// load a preset file, creates a new file if it does not exist
@@ -229,9 +212,9 @@ public slots:
 	void setConsoleType(QString value);
 
     // returns if low solo mode is active
-    bool getLowSoloMode() const { return m_lowSoloMode; }
+    bool getLowSoloMode() const;
     // enables or disables low solo mode
-    void setLowSoloMode(bool value) { m_lowSoloMode = value; emit lowSoloModeChanged(); }
+    void setLowSoloMode(bool value);
 
 	// returns the current spectrum outline as a list of qreal values in the range 0...1
 	// used in GUI to display SpectrumPlot
@@ -257,17 +240,17 @@ public slots:
 
     // forward calls to BPMDetector
     // returns the current bpm
-    float getBPM() { return getBPMManual() || m_bpm.getBPM() == 0.0f ? m_bpmTap.getBpm() : m_bpm.getBPM(); }
+    float getBPM();
     // returns if the detected bpm is old and should be marked as such in the gui
-    bool bpmIsOld() { return m_bpm.bpmIsOld(); }
+    bool bpmIsOld();
     // sets the minium bpm of the range
     void setMinBPM(int value);
     // gets the minium bpm of the range
-    int getMinBPM() { return m_bpm.getMinBPM(); }
+    int getMinBPM();
 
     // set/get bpm mute
-    bool getBPMMute() { return m_bpmOSC.getBPMMute(); }
-    void toggleBPMMute() { m_bpmOSC.toggleBPMMute(); emit bpmMuteChanged(); }
+    bool getBPMMute();
+    void toggleBPMMute();
 
     // set/get the waveform visibility
     bool getWaveformVisible() { return m_waveformVisible; }
@@ -281,52 +264,52 @@ public slots:
     QList<QString> getWaveColors();
 
     // Gets or sets the osc commands sent by the bpm detector
-    QStringList getBPMOscCommands() { return m_bpmOSC.getCommands(); }
-    void setBPMOscCommands(const QStringList commands) { m_bpmOSC.setCommands(commands); }
+    QStringList getBPMOscCommands();
+    void setBPMOscCommands(const QStringList commands);
 
 	// forward calls to AudioInputInterface
 	// see AudioInputInterface.h for documentation
-	QStringList getAvailableInputs() const { return m_audioInput->getAvailableInputs(); }
-	QString getActiveInputName() const { return m_audioInput->getActiveInputName(); }
-	void setInputByName(const QString& name) { m_audioInput->setInputByName(name); emit inputChanged(); emit presetChanged(); }
-	qreal getVolume() const { return m_audioInput->getVolume(); }
-	void setVolume(const qreal& value) { m_audioInput->setVolume(value); emit presetChanged(); }
+	QStringList getAvailableInputs() const;
+	QString getActiveInputName() const;
+	void setInputByName(const QString& name);
+	qreal getVolume() const;
+	void setVolume(const qreal& value);
 
 	// forward calls to ScaledSpectrum of FFTAnalyzer
 	// see ScaledSpectrum.h for documentation
-	qreal getFftGain() const { return m_fft.getScaledSpectrum().getGain(); }
-	void setFftGain(const qreal& value) { m_fft.getScaledSpectrum().setGain(static_cast<float>(value)); emit gainChanged(); emit presetChanged(); }
-	qreal getFftCompression() const { return m_fft.getScaledSpectrum().getCompression(); }
-	void setFftCompression(const qreal& value) { m_fft.getScaledSpectrum().setCompression(static_cast<float>(value)); emit compressionChanged(); emit presetChanged(); }
-	bool getDecibelConversion() const { return m_fft.getScaledSpectrum().getDecibelConversion(); }
-	void setDecibelConversion(bool value) { m_fft.getScaledSpectrum().setDecibelConversion(value); emit decibelConversionChanged(); emit presetChanged(); }
-	bool getAgcEnabled() const { return m_fft.getScaledSpectrum().getAgcEnabled(); }
-	void setAgcEnabled(bool value) { m_fft.getScaledSpectrum().setAgcEnabled(value); emit agcEnabledChanged(); emit presetChanged(); }
+	qreal getFftGain() const;
+	void setFftGain(const qreal& value);
+	qreal getFftCompression() const;
+	void setFftCompression(const qreal& value);
+	bool getDecibelConversion() const;
+	void setDecibelConversion(bool value);
+	bool getAgcEnabled() const;
+	void setAgcEnabled(bool value);
 
 	// forward calls to OSCNetworkManager
 	// see OSCNetworkManager.h for documentation
-	QString getOscIpAddress() const { return m_osc.getIpAddress().toString(); }
-	void setOscIpAddress(const QString& value) { m_osc.setIpAddress(QHostAddress(value)); emit settingsChanged(); }
-	quint16 getOscUdpTxPort() const { return m_osc.getUdpTxPort(); }
-	void setOscUdpTxPort(const quint16& value) { m_osc.setUdpTxPort(value); emit settingsChanged(); }
-	quint16 getOscUdpRxPort() const { return m_osc.getUdpRxPort(); }
-	void setOscUdpRxPort(const quint16& value) { m_osc.setUdpRxPort(value); emit settingsChanged(); }
-	quint16 getOscTcpPort() const { return m_osc.getTcpPort(); }
-	void setOscTcpPort(const quint16& value) { m_osc.setTcpPort(value); emit settingsChanged(); }
-	bool getOscEnabled() const { return m_osc.getEnabled(); }
+	QString getOscIpAddress() const;
+	void setOscIpAddress(const QString& value);
+	quint16 getOscUdpTxPort() const;
+	void setOscUdpTxPort(const quint16& value);
+	quint16 getOscUdpRxPort() const;
+	void setOscUdpRxPort(const quint16& value);
+	quint16 getOscTcpPort() const;
+	void setOscTcpPort(const quint16& value);
+	bool getOscEnabled() const;
 	void setOscEnabled(bool value);
-	bool getUseTcp() const { return m_osc.getUseTcp(); }
-	void setUseTcp(bool value) { m_osc.setUseTcp(value); }
-	bool getUseOsc_1_1() const { return m_osc.getUseOsc_1_1(); }
-	void setUseOsc_1_1(bool value) { m_osc.setUseOsc_1_1(value); }
-	bool isConnected() const { return m_osc.isConnected(); }
-	QStringList getOscLog() const { return m_osc.getLog(); }
-	bool getOscLogIncomingIsEnabled() const { return m_osc.getLogIncomingIsEnabled(); }
-	bool getOscLogOutgoingIsEnabled() const { return m_osc.getLogOutgoingIsEnabled(); }
-	void enableOscLogging(bool incoming, bool outgoing) { m_osc.enableLogging(incoming, outgoing); }
-	void sendOscMessage(QString message, bool forced) { m_osc.sendMessage(message, forced); }
-	void sendOscMessage(QString path, QString argument, bool forced) { m_osc.sendMessage(path, argument, forced); }
-	void clearOscLog() const { m_osc.clearLog(); }
+	bool getUseTcp() const;
+	void setUseTcp(bool value);
+	bool getUseOsc_1_1() const;
+	void setUseOsc_1_1(bool value);
+	bool isConnected() const;
+	QStringList getOscLog() const;
+	bool getOscLogIncomingIsEnabled() const;
+	bool getOscLogOutgoingIsEnabled() const;
+	void enableOscLogging(bool incoming, bool outgoing);
+	void sendOscMessage(QString message, bool forced);
+	void sendOscMessage(QString path, QString argument, bool forced);
+	void clearOscLog() const;
 
 	// forward calls to OSCMapping
 	// see OSCMapping.h for documentation
@@ -360,9 +343,6 @@ public slots:
 	void enableOscLevelFeedback(bool value);
 
 private:
-	// instantiates the trigger generators
-	void initializeGenerators();
-
 	// connects the trigger generators with the GUI by creating GuiControllers and setting context properties
 	void connectGeneratorsWithGui();
 
@@ -385,37 +365,28 @@ public:  // to allow access from OSCMapping class without getters
 	TriggerGuiController* m_silenceController;  // GUI Controller for Silence TriggerGenerator
 
 protected:
+    std::unique_ptr<sound2osc::Sound2OscEngine> m_engine;
+
 	QQmlApplicationEngine*		m_qmlEngine;  // pointer to QmlEngine (created in main.cpp)
 	std::shared_ptr<sound2osc::SettingsManager> m_settingsManager;  // Application settings
 	sound2osc::PresetManager*   m_presetManager;  // Preset management (owned by main.cpp)
-	QVector<TriggerGeneratorInterface*> m_triggerContainer;  // list of all TriggerGenerators
-	MonoAudioBuffer				m_buffer;  // MonoAudioBuffer instance
-	AudioInputInterface*		m_audioInput;  // pointer to AudioInputInterface implementation
-	FFTAnalyzer					m_fft;  // FFTAnalyzer instance
-	OSCNetworkManager			m_osc;  // OSCNetworkManager instance
+	
+    // Legacy members - TODO: remove when presets fully migrated to JSON
 	QString						m_consoleType;  // console type as string
-	QTimer						m_fftUpdateTimer;  // Timer used to trigger FFT update
-	QString						m_currentPresetFilename;  // file path and name of active preset
+	
+    QString						m_currentPresetFilename;  // file path and name of active preset
 	bool						m_presetChangedButNotSaved;  // true, if the preset has been changed but not saved yet
 	QMap<QString, QObject*>		m_dialogs;  // list of all open dialogs (QML-filename -> GUI element instance)
 	OSCMapping					m_oscMapping;  // OSCMapping instance
 	QTimer						m_oscUpdateTimer;  // Timer used to trigger OSC level feedback
-    bool                        m_lowSoloMode;  // true if low solo mode is active
-    BPMOscControler             m_bpmOSC; // Manages transmiting the bpm via osc
-    BPMDetector                 m_bpm; // BPMDetector instance
+    
     BPMTapDetector              m_bpmTap; // BPMTapDetector instance
     bool                        m_bpmActive; // true if the bpm detection is active
-    QTimer                      m_bpmUpdatetimer; // Timer to trigger bpm update
+    
+    // Note: m_fftUpdateTimer and m_bpmUpdatetimer are now managed by Sound2OscEngine
+    
     bool                        m_waveformVisible; // true if the waveform is visible
     bool                        m_autoBpm; // true if BPM should be set automatically
-
-	TriggerGenerator* m_bass;  // pointer to Bass TriggerGenerator instance
-	TriggerGenerator* m_loMid;  // pointer to LoMid TriggerGenerator instance
-	TriggerGenerator* m_hiMid;  // pointer to HiMid TriggerGenerator instance
-	TriggerGenerator* m_high;  // pointer to High TriggerGenerator instance
-	TriggerGenerator* m_envelope;  // pointer to Level TriggerGenerator instance
-	TriggerGenerator* m_silence;  // pointer to Silence TriggerGenerator instance
-
 };
 
 #endif // MAINCONTROLLER_H

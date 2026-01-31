@@ -1,8 +1,8 @@
 # AI Agent Instructions
 
-> **Project Status: Phase 3 Complete ✅**
+> **Project Status: Phase 5.1 Complete ✅**
 >
-> The sound2osc project has completed Phase 3 (Architecture Refactoring & Headless App). Both GUI and CLI applications are fully functional and compiled with no errors. See [MODERNIZATION_PLAN.md](./MODERNIZATION_PLAN.md) for complete roadmap.
+> The sound2osc project has completed Phase 5.1 (Core Engine Unification). The `Sound2OscEngine` now encapsulates all business logic, shared between Headless and GUI apps. See [MODERNIZATION_PLAN.md](./MODERNIZATION_PLAN.md) for remaining steps.
 
 ## Overview for AI Assistants
 
@@ -98,9 +98,11 @@ ALLOWED dependencies (DAG - no cycles):
   AudioCapture → FFTAnalyzer → TriggerGenerator → OSCClient
                 → BPMDetector → [reports to MainController]
   
+  Sound2OscEngine → [Owns all above components]
+  MainController → Sound2OscEngine
+  
   All components → Logger (for logging)
   All components → Config (read-only for settings)
-  MainController → [orchestrates all components]
 
 ❌ FORBIDDEN cycles:
   - AudioCapture depends on anything that depends on it
@@ -522,6 +524,7 @@ grep -r "Q_SIGNALS" libs/sound2osc-core/include/     # Find patterns
 ### Core Components Summary
 | Component | Purpose | Hot Path | Qt Modules |
 |-----------|---------|----------|-----------|
+| Sound2OscEngine | Central orchestration | No | Core |
 | AudioCapture | Audio input abstraction | No | Multimedia |
 | FFTAnalyzer | Spectrum analysis | **YES** | Core |
 | TriggerGenerator | Trigger detection | **YES** | Core |

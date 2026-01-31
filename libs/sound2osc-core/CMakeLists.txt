@@ -35,6 +35,7 @@ set(CORE_SOURCES
 
     # Core module
     src/core/AppInfo.cpp
+    src/core/Sound2OscEngine.cpp
 )
 
 set(CORE_HEADERS
@@ -70,6 +71,7 @@ set(CORE_HEADERS
     include/sound2osc/core/utils.h
     include/sound2osc/core/versionInfo.h
     include/sound2osc/core/AppInfo.h
+    include/sound2osc/core/Sound2OscEngine.h
 
     # Logging module
     include/sound2osc/logging/Logger.h
