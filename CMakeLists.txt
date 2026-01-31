@@ -12,10 +12,21 @@ project(sound2osc
 option(SOUND2OSC_BUILD_GUI "Build the Qt GUI application" ON)
 option(SOUND2OSC_BUILD_HEADLESS "Build the headless CLI application" OFF)
 option(SOUND2OSC_BUILD_TESTS "Build unit tests" OFF)
+option(SOUND2OSC_ENABLE_COVERAGE "Enable code coverage generation" OFF)
 
 # -----------------------------------------------------------------------------
 # Global settings
 # -----------------------------------------------------------------------------
+if(SOUND2OSC_ENABLE_COVERAGE)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        message(STATUS "Enabling code coverage")
+        add_compile_options(--coverage)
+        add_link_options(--coverage)
+    else()
+        message(WARNING "Code coverage not supported for this compiler")
+    endif()
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -37,6 +48,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(cmake/CompilerWarnings.cmake)
 include(cmake/Platform.cmake)
+include(cmake/CodeCoverage.cmake)
 
 # -----------------------------------------------------------------------------
 # Dependencies
@@ -83,6 +95,9 @@ if(SOUND2OSC_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
+# Enable coverage target if requested
+add_code_coverage_target()
+
 # -----------------------------------------------------------------------------
 # Summary
 # -----------------------------------------------------------------------------
@@ -94,4 +109,5 @@ message(STATUS "  Qt version:      ${Qt6_VERSION}")
 message(STATUS "  Build GUI:       ${SOUND2OSC_BUILD_GUI}")
 message(STATUS "  Build headless:  ${SOUND2OSC_BUILD_HEADLESS}")
 message(STATUS "  Build tests:     ${SOUND2OSC_BUILD_TESTS}")
+message(STATUS "  Code coverage:   ${SOUND2OSC_ENABLE_COVERAGE}")
 message(STATUS "")

@@ -59,6 +59,14 @@ cmake -B build
 cmake --build build
 ```
 
+### Testing & Coverage
+To run unit tests and check code coverage:
+```bash
+cmake -B build-coverage -DSOUND2OSC_ENABLE_COVERAGE=ON -DSOUND2OSC_BUILD_TESTS=ON
+cmake --build build-coverage --target coverage
+```
+This generates a report in the terminal.
+
 For detailed development guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
