@@ -4,7 +4,6 @@
 set(CORE_SOURCES
     # Audio module
     src/audio/MonoAudioBuffer.cpp
-    src/audio/QAudioInputWrapper.cpp
 
     # DSP module
     src/dsp/FFTAnalyzer.cpp
@@ -42,7 +41,6 @@ set(CORE_HEADERS
     # Audio module
     include/sound2osc/audio/AudioInputInterface.h
     include/sound2osc/audio/MonoAudioBuffer.h
-    include/sound2osc/audio/QAudioInputWrapper.h
 
     # DSP module
     include/sound2osc/dsp/BasicFFTInterface.h
@@ -83,6 +81,14 @@ set(CORE_HEADERS
     include/sound2osc/config/SettingsManager.h
 )
 
+if(SOUND2OSC_AUDIO_BACKEND STREQUAL "Miniaudio")
+    list(APPEND CORE_SOURCES src/audio/MiniaudioInputWrapper.cpp)
+    list(APPEND CORE_HEADERS include/sound2osc/audio/MiniaudioInputWrapper.h)
+else()
+    list(APPEND CORE_SOURCES src/audio/QAudioInputWrapper.cpp)
+    list(APPEND CORE_HEADERS include/sound2osc/audio/QAudioInputWrapper.h)
+endif()
+
 add_library(sound2osc-core STATIC
     ${CORE_SOURCES}
     ${CORE_HEADERS}
@@ -102,9 +108,20 @@ target_link_libraries(sound2osc-core
     PUBLIC
         Qt6::Core
         Qt6::Network
-        Qt6::Multimedia
         ffft
 )
+
+if(SOUND2OSC_AUDIO_BACKEND STREQUAL "Miniaudio")
+    target_compile_definitions(sound2osc-core PUBLIC SOUND2OSC_USE_MINIAUDIO)
+    target_include_directories(sound2osc-core PRIVATE 
+        ${CMAKE_SOURCE_DIR}/third_party/miniaudio
+    )
+    if(UNIX AND NOT APPLE)
+        target_link_libraries(sound2osc-core PRIVATE dl pthread)
+    endif()
+else()
+    target_link_libraries(sound2osc-core PUBLIC Qt6::Multimedia)
+endif()
 
 # Apply compiler warnings
 sound2osc_set_warnings(sound2osc-core)

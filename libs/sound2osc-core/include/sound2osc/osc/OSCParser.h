@@ -34,6 +34,7 @@
 #include <string.h>
 #include <limits.h>
 #include <stdint.h>
+#include <vector>
 
 
 // Addition by Tim Henning to compile with MinGW:
@@ -108,8 +109,7 @@ public:
 
 protected:
 	EnumFrameMode	m_FrameMode;
-	char			*m_Buf;
-	size_t			m_Capacity;
+	std::vector<char> m_Buf;
 	size_t			m_Size;
 
 	virtual char* GetNextFrame_Mode_1_0(size_t &size);

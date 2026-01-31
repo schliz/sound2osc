@@ -2,16 +2,23 @@
 // Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 
 #include <sound2osc/core/Sound2OscEngine.h>
+#ifdef SOUND2OSC_USE_MINIAUDIO
+#include <sound2osc/audio/MiniaudioInputWrapper.h>
+#else
+#include <sound2osc/audio/QAudioInputWrapper.h>
+#endif
 #include <sound2osc/logging/Logger.h>
 #include <sound2osc/dsp/FFTAnalyzer.h>
 #include <QJsonArray>
 
 namespace sound2osc {
+// ...
 
 Sound2OscEngine::Sound2OscEngine(std::shared_ptr<SettingsManager> settings, QObject *parent)
     : QObject(parent)
     , m_running(false)
     , m_lowSoloMode(false)
+    , m_accumulatedSamples(0)
     , m_settings(std::move(settings))
 {
     initializeComponents();
@@ -32,7 +39,19 @@ void Sound2OscEngine::initializeComponents()
     m_audioBuffer = std::make_unique<MonoAudioBuffer>(4096 * 4);
 
     // 2. Audio Input
+#ifdef SOUND2OSC_USE_MINIAUDIO
+    m_audioInput = std::make_unique<MiniaudioInputWrapper>(m_audioBuffer.get());
+    Logger::info("Using Miniaudio backend");
+#else
     m_audioInput = std::make_unique<QAudioInputWrapper>(m_audioBuffer.get());
+    Logger::info("Using Qt6 Multimedia backend");
+#endif
+
+    if (m_audioInput) {
+        m_audioInput->setCallback([this](int count) {
+            onAudioProcessed(count);
+        });
+    }
 
     // 3. OSC Manager
     m_osc = std::make_unique<OSCNetworkManager>();
@@ -65,11 +84,9 @@ void Sound2OscEngine::initializeComponents()
 void Sound2OscEngine::connectComponents()
 {
     // Configure timers
-    // FFT and BPM run at ~44 Hz (approx 23ms)
-    m_fftTimer.setInterval(1000 / 44);
-    m_fftTimer.setSingleShot(false);
-    connect(&m_fftTimer, &QTimer::timeout, this, &Sound2OscEngine::onFftTimer);
-
+    // BPM run at ~44 Hz (approx 23ms)
+    // FFT is now event-driven via Audio Input Callback
+    
     m_bpmTimer.setInterval(1000 / 44);
     m_bpmTimer.setSingleShot(false);
     connect(&m_bpmTimer, &QTimer::timeout, this, &Sound2OscEngine::onBpmTimer);
@@ -107,7 +124,7 @@ void Sound2OscEngine::start()
     applySettings();
     
     m_running = true;
-    m_fftTimer.start();
+    m_audioInput->start();
     m_bpmTimer.start();
     m_statusTimer.start();
 }
@@ -118,7 +135,7 @@ void Sound2OscEngine::stop()
     
     Logger::info("Stopping Engine...");
     m_running = false;
-    m_fftTimer.stop();
+    m_audioInput->stop();
     m_bpmTimer.stop();
     m_statusTimer.stop();
 }
@@ -146,6 +163,17 @@ void Sound2OscEngine::onStatusTimer()
     Logger::debug("Status: BPM=%1, Audio=%2", 
                   QString::number(static_cast<double>(bpm), 'f', 1),
                   m_audioInput->getActiveInputName());
+}
+
+void Sound2OscEngine::onAudioProcessed(int count)
+{
+    m_accumulatedSamples += count;
+    // 44100 Hz / 44 Hz = ~1002 samples
+    if (m_accumulatedSamples >= 1000) {
+        m_accumulatedSamples = 0;
+        // Invoke on main thread to be safe with shared state
+        QMetaObject::invokeMethod(this, "onFftTimer", Qt::QueuedConnection);
+    }
 }
 
 void Sound2OscEngine::setLowSoloMode(bool enabled)

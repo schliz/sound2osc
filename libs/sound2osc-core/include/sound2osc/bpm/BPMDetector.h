@@ -32,12 +32,17 @@
 #include <QtMath>
 #include <QVector>
 #include <list>
-#include <QColor>
 #include <memory>
 
 // Rate to calculate the BPM (significantly lower than the sampling period,
 // but still only quater the buffer length, so this should be fine)
 static const int BPM_UPDATE_RATE = 20; // Hz
+
+struct SpectrumColor {
+    int r;
+    int g;
+    int b;
+};
 
 // A class to modell a cluster of Inter Offset Intervalls (IOIs).
 class BeatString;
@@ -67,7 +72,7 @@ public:
     // Helper functions to display a nice GUI
     const QVector<bool>& getOnsets() { return m_onsetBuffer; }
     const Qt3DCore::QCircularBuffer<float>& getWaveDisplay() { return m_spectralFluxBuffer; }
-    const Qt3DCore::QCircularBuffer<QColor>& getWaveColors() { return m_waveColors; }
+    const Qt3DCore::QCircularBuffer<SpectrumColor>& getWaveColors() { return m_waveColors; }
 
 protected:
     // calculates a Hann Window for FFT and saves it to m_window
@@ -99,7 +104,7 @@ protected:
     QVector<bool>                       m_onsetBuffer; // a boolen buffer indicating wether there was a onset i frames ago
     Qt3DCore::QCircularBuffer<float>    m_spectralFluxBuffer; // a float buffer caching the spectral flux of the bands of the last frames
     QVector<float>                      m_spectralFluxNormalized; // a vector to copy the normalized spectral flux data into
-    Qt3DCore::QCircularBuffer<QColor>   m_waveColors; // the color for each sample to give spectral information in the GUI
+    Qt3DCore::QCircularBuffer<SpectrumColor>   m_waveColors; // the color for each sample to give spectral information in the GUI
     QVector<float>                      m_buffer;  // buffer for prepared data (intermediate result)
     QVector<float>                      m_fftOutput; // buffer for FFT Data
     QVector<float>                      m_currentSpectrum; // the spectrum currently being calculated

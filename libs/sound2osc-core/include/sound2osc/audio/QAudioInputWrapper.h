@@ -46,6 +46,10 @@ public:
 	explicit QAudioInputWrapper(MonoAudioBuffer* m_buffer);
 	~QAudioInputWrapper() override;
 
+    void start() override;
+    void stop() override;
+    void setCallback(Callback callback) override { m_callback = callback; }
+
 	QStringList getAvailableInputs() const override;
 
 	QString getDefaultInputName() const override;
@@ -69,6 +73,7 @@ protected:
 	QAudioSource*	m_audioSource;  // a pointer to the used audio source object (Qt6 replacement for QAudioInput)
 	QIODevice*		m_audioIODevice;  // a pointer to the stream like "device" used while recording
 	QString			m_activeInputName;  // the name of the active audio input
+    Callback        m_callback;
 };
 
 #endif // QAUDIOINPUTWRAPPER_H

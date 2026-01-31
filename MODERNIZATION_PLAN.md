@@ -27,12 +27,12 @@ The current test suite covers basic infrastructure but needs more depth to ensur
 
 Refining the codebase to leverage C++17/20 features and improve memory safety.
 
-- [ ] **Filesystem Migration**
+- [x] **Filesystem Migration**
     - Replace legacy `QDir` and `QFile` usage with `std::filesystem` where appropriate to reduce dependency on Qt's I/O layer in the core library.
-- [ ] **Smart Pointer Migration**
+- [x] **Smart Pointer Migration**
     - Eliminate remaining raw `new`/`delete` calls.
     - Review `MainController` and GUI controllers to ensure proper use of `std::unique_ptr` and `std::shared_ptr`.
-- [ ] **Const Correctness & Thread Safety**
+- [x] **Const Correctness & Thread Safety**
     - Audit the hot paths (FFT/Trigger loops) for unnecessary copies and ensure thread-safe access to shared data buffers.
 
 ---

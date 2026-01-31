@@ -52,7 +52,7 @@ ScaledSpectrum::ScaledSpectrum(const int &baseFreq, const int &scaledLength)
 	}
 }
 
-void ScaledSpectrum::updateWithLinearSpectrum(const QVector<float> linearSpectrum)
+void ScaledSpectrum::updateWithLinearSpectrum(const QVector<float>& linearSpectrum)
 {
     const int linearLength = static_cast<int>(linearSpectrum.size());
 	double freq = m_baseFreq;

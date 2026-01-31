@@ -69,15 +69,7 @@ MainController::MainController(QQmlApplicationEngine* qmlEngine,
 
 MainController::~MainController()
 {
-	// delete all objects created on Heap:
-    delete m_bassController; m_bassController = nullptr;
-    delete m_loMidController; m_loMidController = nullptr;
-    delete m_hiMidController; m_hiMidController = nullptr;
-    delete m_highController; m_highController = nullptr;
-    delete m_envelopeController; m_envelopeController = nullptr;
-    delete m_silenceController; m_silenceController = nullptr;
-    
-    // m_engine will be automatically deleted
+	// m_engine and controllers will be automatically deleted
 }
 
 void MainController::initBeforeQmlIsLoaded()
@@ -118,29 +110,29 @@ void MainController::connectGeneratorsWithGui()
 {
 	// create TriggerGuiController objects
 	// and initialize them with the correct triggerGenerators from the Engine:
-	m_bassController = new TriggerGuiController(m_engine->getBass());
-	m_loMidController = new TriggerGuiController(m_engine->getLoMid());
-	m_hiMidController = new TriggerGuiController(m_engine->getHiMid());
-	m_highController = new TriggerGuiController(m_engine->getHigh());
-	m_envelopeController = new TriggerGuiController(m_engine->getEnvelope());
-	m_silenceController = new TriggerGuiController(m_engine->getSilence());
+	m_bassController = std::make_unique<TriggerGuiController>(m_engine->getBass());
+	m_loMidController = std::make_unique<TriggerGuiController>(m_engine->getLoMid());
+	m_hiMidController = std::make_unique<TriggerGuiController>(m_engine->getHiMid());
+	m_highController = std::make_unique<TriggerGuiController>(m_engine->getHigh());
+	m_envelopeController = std::make_unique<TriggerGuiController>(m_engine->getEnvelope());
+	m_silenceController = std::make_unique<TriggerGuiController>(m_engine->getSilence());
 
 	// set a QML context property for each
 	// so that for example the m_bassController is accessible as "bassController" in QML:
-	m_qmlEngine->rootContext()->setContextProperty("bassController", m_bassController);
-	m_qmlEngine->rootContext()->setContextProperty("loMidController", m_loMidController);
-	m_qmlEngine->rootContext()->setContextProperty("hiMidController", m_hiMidController);
-	m_qmlEngine->rootContext()->setContextProperty("highController", m_highController);
-	m_qmlEngine->rootContext()->setContextProperty("envelopeController", m_envelopeController);
-	m_qmlEngine->rootContext()->setContextProperty("silenceController", m_silenceController);
+	m_qmlEngine->rootContext()->setContextProperty("bassController", m_bassController.get());
+	m_qmlEngine->rootContext()->setContextProperty("loMidController", m_loMidController.get());
+	m_qmlEngine->rootContext()->setContextProperty("hiMidController", m_hiMidController.get());
+	m_qmlEngine->rootContext()->setContextProperty("highController", m_highController.get());
+	m_qmlEngine->rootContext()->setContextProperty("envelopeController", m_envelopeController.get());
+	m_qmlEngine->rootContext()->setContextProperty("silenceController", m_silenceController.get());
 
 	// connect the presetChanged signal to the onPresetChanged slot of this controller:
-	connect(m_bassController, &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
-	connect(m_loMidController, &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
-	connect(m_hiMidController, &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
-	connect(m_highController, &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
-	connect(m_envelopeController, &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
-	connect(m_silenceController, &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
+	connect(m_bassController.get(), &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
+	connect(m_loMidController.get(), &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
+	connect(m_hiMidController.get(), &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
+	connect(m_highController.get(), &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
+	connect(m_envelopeController.get(), &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
+	connect(m_silenceController.get(), &TriggerGuiController::presetChanged, this, &MainController::onPresetChanged);
 
 }
 
