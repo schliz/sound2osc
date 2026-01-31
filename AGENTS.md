@@ -1,8 +1,8 @@
 # AI Agent Instructions
 
-> **Project Status: Phase 5.2 Complete ✅**
+> **Project Status: Modernization Baseline Complete ✅**
 >
-> The sound2osc project has completed Phase 5.2 (Configuration Migration). Presets are now stored as JSON files, and the `Sound2OscEngine` manages the entire application state. See [MODERNIZATION_PLAN.md](./MODERNIZATION_PLAN.md) for remaining steps.
+> The sound2osc project has completed its architectural core modernization. The `Sound2OscEngine` now encapsulates all business logic, shared between Headless and GUI apps. Presets and configuration are fully JSON-based. See [MODERNIZATION_PLAN.md](./MODERNIZATION_PLAN.md) for remaining steps.
 
 ## Overview for AI Assistants
 
@@ -553,4 +553,4 @@ This document is for AI assistants. For human developers, see:
 - **[MODERNIZATION_PLAN.md](./MODERNIZATION_PLAN.md)** – Project roadmap and decisions
 - **[README.md](./README.md)** – User guide and feature overview
 
-Last updated: Phase 3 completion (January 2026)
+Last updated: Modernization Baseline (January 2026)
