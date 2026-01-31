@@ -294,4 +294,3 @@ WantedBy=multi-user.target
 
 - [Configuration Reference](CONFIG_REFERENCE.md) - Detailed config options
 - [OSC Reference](OSC_REFERENCE.md) - Complete OSC message documentation
-- [Troubleshooting](TROUBLESHOOTING.md) - Common issues and solutions
