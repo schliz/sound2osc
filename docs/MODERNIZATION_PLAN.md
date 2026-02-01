@@ -41,9 +41,9 @@ Refining the codebase to leverage C++17/20 features and improve memory safety.
 
 Increasing the flexibility of the core library for diverse deployment scenarios.
 
-- [ ] **Alternative Audio Backends**
+- [x] **Alternative Audio Backends**
     - Implement non-Qt audio capture backends (e.g., pure PulseAudio, ALSA, or Miniaudio) to allow the headless application to run with minimal dependencies.
-- [ ] **Headless Optimization**
+- [x] **Headless Optimization**
     - Further optimize the `Sound2OscEngine` for low-latency operation on resource-constrained devices (e.g., Raspberry Pi Zero).
 
 ---
