@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -99,6 +101,22 @@ void TriggerFilter::restore(const QString name, QSettings &settings)
 	setOnDelay(settings.value(name + "/onDelay").toReal());
 	setOffDelay(settings.value(name + "/offDelay").toReal());
 	setMaxHold(settings.value(name + "/maxHold").toReal());
+}
+
+QJsonObject TriggerFilter::toState() const
+{
+    QJsonObject state;
+    state["onDelay"] = m_onDelay;
+    state["offDelay"] = m_offDelay;
+    state["maxHold"] = m_maxHold;
+    return state;
+}
+
+void TriggerFilter::fromState(const QJsonObject& state)
+{
+    setOnDelay(state["onDelay"].toDouble(0.0));
+    setOffDelay(state["offDelay"].toDouble(0.0));
+    setMaxHold(state["maxHold"].toDouble(0.0));
 }
 
 void TriggerFilter::onOnDelayEnd()

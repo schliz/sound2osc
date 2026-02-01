@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +35,7 @@ ApplicationWindow {
     minimumWidth:  160
     minimumHeight: 200
 
-	title: qsTr("ETC - Sound2Light")
+	title: qsTr("sound2osc")
 
     // the minimal mode property, as an alias from the bpm settings where it is manipulated
     property alias minimalMode: spectrumWithControls.minimalMode

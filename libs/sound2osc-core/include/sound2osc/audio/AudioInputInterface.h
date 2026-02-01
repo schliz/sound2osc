@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +27,7 @@
 
 #include <QString>
 #include <QStringList>
+#include <functional>
 
 // An interface for an audio input.
 // The input device can be selected
@@ -35,8 +38,20 @@ class AudioInputInterface
 {
 
 public:
+    using Callback = std::function<void(int samplesCount)>;
+
 	explicit AudioInputInterface(MonoAudioBuffer* buffer) : m_buffer(buffer) {}
 	virtual ~AudioInputInterface() {}
+
+    // Start audio capture
+    virtual void start() = 0;
+
+    // Stop audio capture
+    virtual void stop() = 0;
+
+    // Set a callback to be notified when samples are processed
+    // The int argument represents the number of new samples added
+    virtual void setCallback(Callback callback) = 0;
 
 	// returns a list of the names of all available input devices
 	virtual QStringList getAvailableInputs() const = 0;

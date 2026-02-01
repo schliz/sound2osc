@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -88,7 +90,7 @@ void BPMTapDetector::triggerBeat() {
     // averageBeatDuration is in sec
     float averageBeatDuration = static_cast<float>(sumBeatDuration) / static_cast<float>(m_lastBeats.size() - 1);
     m_bpm = bpmInRange((1.0f / averageBeatDuration) * 60.0f, m_minBPM);
-    m_oscController->transmitBPM(m_bpm);
+    if(m_oscController) m_oscController->transmitBPM(m_bpm);
 }
 
 void BPMTapDetector::reset() {

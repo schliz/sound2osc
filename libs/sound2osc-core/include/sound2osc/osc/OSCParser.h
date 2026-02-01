@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +34,7 @@
 #include <string.h>
 #include <limits.h>
 #include <stdint.h>
+#include <vector>
 
 
 // Addition by Tim Henning to compile with MinGW:
@@ -106,8 +109,7 @@ public:
 
 protected:
 	EnumFrameMode	m_FrameMode;
-	char			*m_Buf;
-	size_t			m_Capacity;
+	std::vector<char> m_Buf;
 	size_t			m_Size;
 
 	virtual char* GetNextFrame_Mode_1_0(size_t &size);

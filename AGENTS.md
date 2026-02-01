@@ -1,8 +1,8 @@
 # AI Agent Instructions
 
-> **Project Status: Phase 3 Complete ✅**
+> **Project Status: Modernization Baseline Complete ✅**
 >
-> The sound2osc project has completed Phase 3 (Architecture Refactoring & Headless App). Both GUI and CLI applications are fully functional and compiled with no errors. See [MODERNIZATION_PLAN.md](./MODERNIZATION_PLAN.md) for complete roadmap.
+> The sound2osc project has completed its architectural core modernization. The `Sound2OscEngine` now encapsulates all business logic, shared between Headless and GUI apps. Presets and configuration are fully JSON-based. See [MODERNIZATION_PLAN.md](./MODERNIZATION_PLAN.md) for remaining steps.
 
 ## Overview for AI Assistants
 
@@ -11,10 +11,10 @@ This document provides structured information for AI agents and automated tools 
 ### Project Essentials
 
 - **Project Type:** Qt6 C++17 audio analysis and OSC protocol application
-- **Architecture:** Modular core library + GUI/CLI frontends
+- **Architecture:** Modular core library (swappable audio backend) + GUI/CLI frontends
 - **Build System:** CMake 3.23+
 - **Target:** Linux, Windows, macOS (Phase 4: CI/CD in progress)
-- **Status:** Feature-complete, Phase 3 done, Phase 4 starting
+- **Status:** Feature-complete, Portability phase in progress
 
 ---
 
@@ -25,12 +25,13 @@ These rules are INVIOLABLE. Violations break the entire architecture:
 ### 1.1 Core Library Independence (CRITICAL)
 ```
 ✅ ALLOWED in /libs/sound2osc-core/:
-  - Qt6::Core, Qt6::Network, Qt6::Multimedia
+  - Qt6::Core, Qt6::Network
+  - Qt6::Multimedia (ONLY if using Qt audio backend)
   - Standard library (C++17)
-  - Third-party libraries (libfftw3)
+  - Third-party libraries (libfftw3, miniaudio)
   
 ❌ FORBIDDEN in /libs/sound2osc-core/:
-  - Qt6::Gui, Qt6::Quick, Qt6::Widgets
+  - Qt6::Gui, Qt6::Quick, Qt6::Widgets (Violations fixed in BPMDetector)
   - Any UI-related classes or functions
   - Direct file I/O (use Logger for logging)
   - GUI-specific configuration (e.g., QSettings)
@@ -98,9 +99,11 @@ ALLOWED dependencies (DAG - no cycles):
   AudioCapture → FFTAnalyzer → TriggerGenerator → OSCClient
                 → BPMDetector → [reports to MainController]
   
+  Sound2OscEngine → [Owns all above components]
+  MainController → Sound2OscEngine
+  
   All components → Logger (for logging)
   All components → Config (read-only for settings)
-  MainController → [orchestrates all components]
 
 ❌ FORBIDDEN cycles:
   - AudioCapture depends on anything that depends on it
@@ -117,7 +120,7 @@ Quick file location guide:
 ### Public API Headers (Don't break these)
 ```
 libs/sound2osc-core/include/sound2osc/
-├── audio/            [AudioCapture, AudioBuffer, AudioDevice]
+├── audio/            [AudioInputInterface, MiniaudioInputWrapper, QAudioInputWrapper]
 ├── dsp/              [FFTAnalyzer, Spectrum, SpectrumBuffer]
 ├── trigger/          [TriggerGenerator, TriggerEvent]
 ├── bpm/              [BPMDetector, BeatInfo]
@@ -130,7 +133,8 @@ libs/sound2osc-core/include/sound2osc/
 ### Implementation Files (Safe to modify)
 ```
 libs/sound2osc-core/src/
-├── AudioCapture.cpp          [Audio input, device enumeration]
+├── MiniaudioInputWrapper.cpp [Miniaudio backend implementation]
+├── QAudioInputWrapper.cpp    [Qt Multimedia backend implementation]
 ├── FFTAnalyzer.cpp           [Real-time FFT, spectrum analysis]
 ├── TriggerGenerator.cpp       [Trigger detection algorithms]
 ├── BPMDetector.cpp           [Beat detection]
@@ -158,6 +162,7 @@ CMakeLists.txt                 [Root build config]
 MODERNIZATION_PLAN.md          [Architecture decisions, roadmap]
 CONTRIBUTING.md                [Human-facing developer guide]
 README.md                      [User-facing overview]
+docs/BUILD.md                  [Detailed build instructions]
 ```
 
 ---
@@ -522,6 +527,7 @@ grep -r "Q_SIGNALS" libs/sound2osc-core/include/     # Find patterns
 ### Core Components Summary
 | Component | Purpose | Hot Path | Qt Modules |
 |-----------|---------|----------|-----------|
+| Sound2OscEngine | Central orchestration | No | Core |
 | AudioCapture | Audio input abstraction | No | Multimedia |
 | FFTAnalyzer | Spectrum analysis | **YES** | Core |
 | TriggerGenerator | Trigger detection | **YES** | Core |
@@ -550,4 +556,4 @@ This document is for AI assistants. For human developers, see:
 - **[MODERNIZATION_PLAN.md](./MODERNIZATION_PLAN.md)** – Project roadmap and decisions
 - **[README.md](./README.md)** – User guide and feature overview
 
-Last updated: Phase 3 completion (January 2026)
+Last updated: Modernization Baseline (January 2026)

@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,20 +27,18 @@
 FFTAnalyzer::FFTAnalyzer(const MonoAudioBuffer& buffer,QVector<TriggerGeneratorInterface*>& triggerContainer)
 	: m_inputBuffer(buffer)
 	, m_triggerContainer(triggerContainer)
-	, m_fft(nullptr)
 	, m_buffer(NUM_SAMPLES)
 	, m_window(NUM_SAMPLES)
 	, m_fftOutput(NUM_SAMPLES)
 	, m_linearSpectrum(NUM_SAMPLES / 2)
 	, m_scaledSpectrum(SCALED_SPECTRUM_BASE_FREQ, SCALED_SPECTRUM_LENGTH)
 {
-	m_fft = new FFTRealWrapper<NUM_SAMPLES_EXPONENT>();
+	m_fft = std::make_unique<FFTRealWrapper<NUM_SAMPLES_EXPONENT>>();
 	calculateWindow();
 }
 
 FFTAnalyzer::~FFTAnalyzer()
 {
-	delete m_fft;
 }
 
 void FFTAnalyzer::calculateWindow()

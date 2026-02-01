@@ -33,6 +33,7 @@ ui_*.h
 *.moc
 Makefile
 *-build-*
+build-coverage/
 
 # CMake generated files
 CMakeCache.txt

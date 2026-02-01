@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -49,6 +51,28 @@ void TriggerOscParameters::restore(const QString name, QSettings &settings)
 	setMinLevelValue(settings.value(name + "/osc/minLevelValue").toReal());
 	setMaxLevelValue(settings.value(name + "/osc/maxLevelValue").toReal());
 	setLabelText(settings.value(name + "/osc/labelText").toString());
+}
+
+QJsonObject TriggerOscParameters::toState() const
+{
+    QJsonObject state;
+    if (!m_onMessage.isEmpty()) state["onMessage"] = m_onMessage;
+    if (!m_offMessage.isEmpty()) state["offMessage"] = m_offMessage;
+    if (!m_levelMessage.isEmpty()) state["levelMessage"] = m_levelMessage;
+    if (m_minLevelValue != 0.0) state["minLevelValue"] = m_minLevelValue;
+    if (m_maxLevelValue != 1.0) state["maxLevelValue"] = m_maxLevelValue;
+    if (!m_labelText.isEmpty()) state["labelText"] = m_labelText;
+    return state;
+}
+
+void TriggerOscParameters::fromState(const QJsonObject& state)
+{
+    m_onMessage = state["onMessage"].toString("");
+    m_offMessage = state["offMessage"].toString("");
+    m_levelMessage = state["levelMessage"].toString("");
+    m_minLevelValue = state["minLevelValue"].toDouble(0.0);
+    m_maxLevelValue = state["maxLevelValue"].toDouble(1.0);
+    m_labelText = state["labelText"].toString("");
 }
 
 void TriggerOscParameters::resetParameters()

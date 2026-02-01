@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -44,6 +46,10 @@ public:
 	explicit QAudioInputWrapper(MonoAudioBuffer* m_buffer);
 	~QAudioInputWrapper() override;
 
+    void start() override;
+    void stop() override;
+    void setCallback(Callback callback) override { m_callback = callback; }
+
 	QStringList getAvailableInputs() const override;
 
 	QString getDefaultInputName() const override;
@@ -67,6 +73,7 @@ protected:
 	QAudioSource*	m_audioSource;  // a pointer to the used audio source object (Qt6 replacement for QAudioInput)
 	QIODevice*		m_audioIODevice;  // a pointer to the stream like "device" used while recording
 	QString			m_activeInputName;  // the name of the active audio input
+    Callback        m_callback;
 };
 
 #endif // QAUDIOINPUTWRAPPER_H

@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,6 +32,7 @@
 #include <QtMath>
 #include <QVector>
 #include <QDebug>
+#include <memory>
 
 // the number of samples used for FFT expressed as an exponent of 2
 static constexpr int NUM_SAMPLES_EXPONENT = 12;
@@ -77,7 +80,7 @@ protected:
 
 	const MonoAudioBuffer&	m_inputBuffer;  // buffer that stores the audio samples
 	QVector<TriggerGeneratorInterface*>& m_triggerContainer;  // list of all controlled triggerGenerators
-	BasicFFTInterface*		m_fft;  // FFT implementation
+	std::unique_ptr<BasicFFTInterface> m_fft;  // FFT implementation
 	QVector<float>			m_buffer;  // buffer for prepared data (intermediate result)
 	QVector<float>			m_window;  // array with window data
 	QVector<float>			m_fftOutput;  // buffer containing the FFT output (intermediate result)

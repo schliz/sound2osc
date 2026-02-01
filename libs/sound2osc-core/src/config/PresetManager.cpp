@@ -1,125 +1,25 @@
-// Copyright (c) 2016-2026 Electronic Theatre Controls, Inc.
 // SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 
 #include <sound2osc/config/PresetManager.h>
 #include <sound2osc/logging/Logger.h>
 #include <sound2osc/core/versionInfo.h>
 
-#include <QFile>
-#include <QDir>
 #include <QFileInfo>
 #include <QSettings>
 #include <QDateTime>
 #include <QJsonDocument>
 #include <QJsonArray>
 
+#include <filesystem>
+#include <fstream>
+#include <sstream>
+
 namespace sound2osc {
 
 // Current settings format version - increment when format changes
 static constexpr int CURRENT_FORMAT_VERSION = SETTINGS_FORMAT_VERSION;
-
-// ============================================================================
-// PresetData implementation
-// ============================================================================
-
-QJsonObject PresetData::toJson() const
-{
-    QJsonObject json;
-    
-    // Metadata
-    json["version"] = QString(VERSION_STRING);
-    json["formatVersion"] = CURRENT_FORMAT_VERSION;
-    json["changedAt"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-    
-    // FFT/DSP settings
-    json["decibelConversion"] = decibelConversion;
-    json["fftGain"] = fftGain;
-    json["fftCompression"] = fftCompression;
-    json["agcEnabled"] = agcEnabled;
-    
-    // UI settings
-    json["lowSoloMode"] = lowSoloMode;
-    json["waveformVisible"] = waveformVisible;
-    json["consoleType"] = consoleType;
-    
-    // BPM settings
-    QJsonObject bpmJson;
-    bpmJson["active"] = bpmActive;
-    bpmJson["auto"] = autoBpm;
-    bpmJson["min"] = minBpm;
-    bpmJson["tapValue"] = tapBpm;
-    bpmJson["mute"] = bpmMute;
-    
-    QJsonArray commandsArray;
-    for (const QString& cmd : bpmOscCommands) {
-        commandsArray.append(cmd);
-    }
-    bpmJson["oscCommands"] = commandsArray;
-    
-    json["bpm"] = bpmJson;
-    
-    return json;
-}
-
-bool PresetData::fromJson(const QJsonObject& json)
-{
-    // Check format version
-    formatVersion = json["formatVersion"].toInt(0);
-    if (!PresetManager::isFormatValid(formatVersion)) {
-        return false;
-    }
-    
-    // Metadata
-    version = json["version"].toString();
-    changedAt = json["changedAt"].toString();
-    
-    // FFT/DSP settings
-    decibelConversion = json["decibelConversion"].toBool(false);
-    fftGain = json["fftGain"].toDouble(1.0);
-    fftCompression = json["fftCompression"].toDouble(1.0);
-    agcEnabled = json["agcEnabled"].toBool(true);
-    
-    // UI settings
-    lowSoloMode = json["lowSoloMode"].toBool(false);
-    waveformVisible = json["waveformVisible"].toBool(true);
-    consoleType = json["consoleType"].toString("Eos");
-    
-    // BPM settings
-    QJsonObject bpmJson = json["bpm"].toObject();
-    bpmActive = bpmJson["active"].toBool(false);
-    autoBpm = bpmJson["auto"].toBool(false);
-    minBpm = bpmJson["min"].toInt(75);
-    tapBpm = bpmJson["tapValue"].toInt(60);
-    bpmMute = bpmJson["mute"].toBool(false);
-    
-    bpmOscCommands.clear();
-    QJsonArray commandsArray = bpmJson["oscCommands"].toArray();
-    for (const QJsonValue& val : commandsArray) {
-        bpmOscCommands.append(val.toString());
-    }
-    
-    return true;
-}
-
-void PresetData::reset()
-{
-    decibelConversion = false;
-    fftGain = 1.0;
-    fftCompression = 1.0;
-    agcEnabled = true;
-    lowSoloMode = false;
-    waveformVisible = true;
-    consoleType = "Eos";
-    bpmActive = false;
-    autoBpm = false;
-    minBpm = 75;
-    tapBpm = 60;
-    bpmMute = false;
-    bpmOscCommands.clear();
-    version.clear();
-    formatVersion = 0;
-    changedAt.clear();
-}
 
 // ============================================================================
 // PresetManager implementation
@@ -130,70 +30,71 @@ PresetManager::PresetManager(const QString& presetDir, QObject* parent)
     , m_presetDir(presetDir)
 {
     // Ensure preset directory exists
-    QDir dir(m_presetDir);
-    if (!dir.exists()) {
-        dir.mkpath(".");
-        Logger::info("Created preset directory: %1", m_presetDir);
+    std::filesystem::path dir(m_presetDir.toStdString());
+    try {
+        if (!std::filesystem::exists(dir)) {
+            std::filesystem::create_directories(dir);
+            Logger::info("Created preset directory: %1", m_presetDir);
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        Logger::error("Failed to create preset directory: %1", QString::fromStdString(e.what()));
     }
 }
 
 PresetManager::~PresetManager() = default;
 
-PresetData PresetManager::loadPresetFile(const QString& fileName)
+QJsonObject PresetManager::loadPresetFile(const QString& fileName)
 {
-    PresetData data;
+    QJsonObject state;
     QString cleanPath = cleanFilePath(fileName, false);
     
     if (cleanPath.isEmpty()) {
         Logger::warning("Empty preset file path");
         emit loadError("Empty preset file path");
-        return data;
+        return state;
     }
     
-    QFile file(cleanPath);
-    if (!file.exists()) {
+    std::filesystem::path path(cleanPath.toStdString());
+    if (!std::filesystem::exists(path)) {
         Logger::warning("Preset file does not exist: %1", cleanPath);
         emit loadError(QString("Preset does not exist: %1").arg(cleanPath));
-        return data;
+        return state;
     }
     
-    // Try to load as QSettings (INI format) for backward compatibility
-    QSettings settings(cleanPath, QSettings::IniFormat);
-    
-    int formatVersion = settings.value("formatVersion").toInt();
-    if (!isFormatValid(formatVersion)) {
-        Logger::warning("Invalid preset format version: %1", formatVersion);
-        emit loadError("Invalid preset format version");
-        return data;
+    // Check if file is JSON
+    std::ifstream file(path);
+    if (file.is_open()) {
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        std::string content = buffer.str();
+        QByteArray data = QByteArray::fromStdString(content);
+        file.close();
+        
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(data, &error);
+        if (error.error == QJsonParseError::NoError && doc.isObject()) {
+            Logger::info("Loaded JSON preset: %1", cleanPath);
+            emit presetLoaded(QFileInfo(cleanPath).baseName());
+            return doc.object();
+        }
     }
     
-    // Load from QSettings format (existing .s2l files)
-    data.formatVersion = formatVersion;
-    data.version = settings.value("version").toString();
-    data.changedAt = settings.value("changedAt").toString();
+    // Fallback: Try to load as QSettings (INI format) for backward compatibility
+    Logger::info("Attempting to load legacy preset: %1", cleanPath);
+    state = convertLegacySettingsToJson(cleanPath);
     
-    data.decibelConversion = settings.value("dbConversion").toBool();
-    data.fftGain = settings.value("fftGain").toDouble();
-    data.fftCompression = settings.value("fftCompression").toDouble();
-    data.agcEnabled = settings.value("agcEnabled").toBool();
+    if (!state.isEmpty()) {
+        Logger::info("Loaded legacy preset: %1", cleanPath);
+        emit presetLoaded(QFileInfo(cleanPath).baseName());
+    } else {
+        Logger::error("Failed to load preset: %1", cleanPath);
+        emit loadError("Failed to load preset");
+    }
     
-    data.lowSoloMode = settings.value("lowSoloMode").toBool();
-    data.waveformVisible = settings.value("waveformVisible", true).toBool();
-    data.consoleType = settings.value("consoleType").toString();
-    
-    data.bpmActive = settings.value("bpm/Active", false).toBool();
-    data.autoBpm = settings.value("autoBpm", false).toBool();
-    data.minBpm = settings.value("bpm/Min", 75).toInt();
-    data.tapBpm = settings.value("bpm/tapvalue", 60).toInt();
-    data.bpmMute = settings.value("bpm/mute", false).toBool();
-    
-    Logger::info("Preset loaded: %1", cleanPath);
-    emit presetLoaded(QFileInfo(cleanPath).baseName());
-    
-    return data;
+    return state;
 }
 
-bool PresetManager::savePresetFile(const QString& fileName, const PresetData& data, bool isAutosave)
+bool PresetManager::savePresetFile(const QString& fileName, const QJsonObject& state, bool isAutosave)
 {
     QString cleanPath = cleanFilePath(fileName, !isAutosave);
     
@@ -202,39 +103,27 @@ bool PresetManager::savePresetFile(const QString& fileName, const PresetData& da
         return false;
     }
     
-    // Save as QSettings (INI format) for backward compatibility
-    QSettings settings(cleanPath, QSettings::IniFormat);
+    // Inject metadata
+    QJsonObject finalState = state;
+    finalState["version"] = QString(VERSION_STRING);
+    finalState["formatVersion"] = CURRENT_FORMAT_VERSION;
+    finalState["changedAt"] = QDateTime::currentDateTime().toString(Qt::ISODate);
     
-    settings.setValue("version", VERSION_STRING);
-    settings.setValue("formatVersion", CURRENT_FORMAT_VERSION);
-    settings.setValue("changedAt", QDateTime::currentDateTime().toString());
-    
-    settings.setValue("dbConversion", data.decibelConversion);
-    settings.setValue("fftGain", data.fftGain);
-    settings.setValue("fftCompression", data.fftCompression);
-    settings.setValue("agcEnabled", data.agcEnabled);
-    
-    settings.setValue("lowSoloMode", data.lowSoloMode);
-    settings.setValue("waveformVisible", data.waveformVisible);
-    settings.setValue("consoleType", data.consoleType);
-    
-    settings.setValue("bpm/Active", data.bpmActive);
-    settings.setValue("autoBpm", data.autoBpm);
-    settings.setValue("bpm/Min", data.minBpm);
-    settings.setValue("bpm/tapvalue", data.tapBpm);
-    settings.setValue("bpm/mute", data.bpmMute);
-    
-    settings.sync();
-    
-    if (settings.status() != QSettings::NoError) {
-        Logger::error("Failed to save preset: %1", cleanPath);
+    std::filesystem::path path(cleanPath.toStdString());
+    std::ofstream file(path);
+    if (!file.is_open()) {
+        Logger::error("Failed to open file for writing: %1", cleanPath);
         return false;
     }
+    
+    QJsonDocument doc(finalState);
+    file << doc.toJson().toStdString();
+    file.close();
     
     if (!isAutosave) {
         setCurrentPresetPath(cleanPath);
         markAsSaved();
-        Logger::info("Preset saved: %1", cleanPath);
+        Logger::info("Preset saved (JSON): %1", cleanPath);
         emit presetSaved(QFileInfo(cleanPath).baseName());
     } else {
         Logger::debug("Autosave completed: %1", cleanPath);
@@ -243,30 +132,107 @@ bool PresetManager::savePresetFile(const QString& fileName, const PresetData& da
     return true;
 }
 
+// Helper to convert old INI presets to new JSON structure on the fly
+QJsonObject PresetManager::convertLegacySettingsToJson(const QString& path)
+{
+    QSettings settings(path, QSettings::IniFormat);
+    
+    int formatVersion = settings.value("formatVersion").toInt();
+    if (!isFormatValid(formatVersion)) {
+        return QJsonObject();
+    }
+    
+    QJsonObject state;
+    
+    // Global Settings
+    state["lowSoloMode"] = settings.value("lowSoloMode").toBool();
+    
+    // DSP
+    QJsonObject dsp;
+    dsp["decibel"] = settings.value("dbConversion").toBool();
+    dsp["gain"] = settings.value("fftGain").toDouble();
+    dsp["compression"] = settings.value("fftCompression").toDouble();
+    dsp["agc"] = settings.value("agcEnabled").toBool();
+    state["dsp"] = dsp;
+    
+    // BPM
+    QJsonObject bpm;
+    bpm["active"] = settings.value("bpm/Active", false).toBool();
+    bpm["auto"] = settings.value("autoBpm", false).toBool();
+    bpm["min"] = settings.value("bpm/Min", 75).toInt();
+    bpm["mute"] = settings.value("bpm/mute", false).toBool();
+    
+    QJsonObject bpmOsc;
+    QJsonArray commands;
+    int count = settings.value("bpm/osc/count").toInt();
+    for (int i = 0; i < count; ++i) {
+        commands.append(settings.value("bpm/osc/" + QString::number(i)).toString());
+    }
+    bpmOsc["commands"] = commands;
+    bpm["osc"] = bpmOsc;
+    state["bpm"] = bpm;
+    
+    // Triggers
+    QJsonObject triggers;
+    QStringList names = {"bass", "loMid", "hiMid", "high", "envelope", "silence"};
+    
+    for (const QString& name : names) {
+        QJsonObject trigger;
+        trigger["mute"] = settings.value(name + "/mute").toBool();
+        trigger["threshold"] = settings.value(name + "/threshold").toDouble();
+        trigger["midFreq"] = settings.value(name + "/midFreq").toInt();
+        trigger["width"] = settings.value(name + "/width").toDouble();
+        
+        QJsonObject filter;
+        filter["onDelay"] = settings.value(name + "/onDelay").toDouble();
+        filter["offDelay"] = settings.value(name + "/offDelay").toDouble();
+        filter["maxHold"] = settings.value(name + "/maxHold").toDouble();
+        trigger["filter"] = filter;
+        
+        QJsonObject osc;
+        osc["onMessage"] = settings.value(name + "/osc/onMessage").toString();
+        osc["offMessage"] = settings.value(name + "/osc/offMessage").toString();
+        osc["levelMessage"] = settings.value(name + "/osc/levelMessage").toString();
+        osc["minLevelValue"] = settings.value(name + "/osc/minLevelValue").toDouble();
+        osc["maxLevelValue"] = settings.value(name + "/osc/maxLevelValue").toDouble();
+        osc["labelText"] = settings.value(name + "/osc/labelText").toString();
+        trigger["osc"] = osc;
+        
+        triggers[name] = trigger;
+    }
+    state["triggers"] = triggers;
+    
+    return state;
+}
+
 bool PresetManager::presetExists(const QString& fileName) const
 {
     QString cleanPath = cleanFilePath(fileName, false);
-    return QFile::exists(cleanPath);
+    return std::filesystem::exists(cleanPath.toStdString());
 }
 
 bool PresetManager::deletePreset(const QString& fileName)
 {
     QString cleanPath = cleanFilePath(fileName, false);
+    std::filesystem::path path(cleanPath.toStdString());
     
-    QFile file(cleanPath);
-    if (!file.exists()) {
+    if (!std::filesystem::exists(path)) {
         return false;
     }
     
-    if (file.remove()) {
-        Logger::info("Preset deleted: %1", cleanPath);
-        
-        // Clear current preset if it was the deleted one
-        if (m_currentPresetPath == cleanPath) {
-            clearCurrentPreset();
+    try {
+        if (std::filesystem::remove(path)) {
+            Logger::info("Preset deleted: %1", cleanPath);
+            
+            // Clear current preset if it was the deleted one
+            if (m_currentPresetPath == cleanPath) {
+                clearCurrentPreset();
+            }
+            
+            return true;
         }
-        
-        return true;
+    } catch (const std::filesystem::filesystem_error& e) {
+        Logger::error("Failed to delete preset: %1. Error: %2", cleanPath, QString::fromStdString(e.what()));
     }
     
     Logger::error("Failed to delete preset: %1", cleanPath);
@@ -275,17 +241,27 @@ bool PresetManager::deletePreset(const QString& fileName)
 
 QStringList PresetManager::listPresets() const
 {
-    QDir dir(m_presetDir);
-    QStringList filters;
-    filters << "*.s2l";
-    
-    QFileInfoList files = dir.entryInfoList(filters, QDir::Files, QDir::Name);
-    
     QStringList presets;
-    for (const QFileInfo& file : files) {
-        presets.append(file.absoluteFilePath());
+    std::filesystem::path dir(m_presetDir.toStdString());
+    
+    if (!std::filesystem::exists(dir) || !std::filesystem::is_directory(dir)) {
+        return presets;
     }
     
+    try {
+        for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+            if (entry.is_regular_file()) {
+                std::string ext = entry.path().extension().string();
+                if (ext == ".s2o" || ext == ".s2l") {
+                    presets.append(QString::fromStdString(entry.path().string()));
+                }
+            }
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        Logger::error("Failed to list presets: %1", QString::fromStdString(e.what()));
+    }
+    
+    std::sort(presets.begin(), presets.end());
     return presets;
 }
 
@@ -351,18 +327,18 @@ QString PresetManager::autosavePath() const
     return m_presetDir + "/autosave.ats";
 }
 
-PresetData PresetManager::loadAutosave()
+QJsonObject PresetManager::loadAutosave()
 {
     QString path = autosavePath();
-    if (QFile::exists(path)) {
+    if (std::filesystem::exists(path.toStdString())) {
         return loadPresetFile(path);
     }
-    return PresetData();
+    return QJsonObject();
 }
 
-void PresetManager::saveAutosave(const PresetData& data)
+void PresetManager::saveAutosave(const QJsonObject& state)
 {
-    savePresetFile(autosavePath(), data, true);
+    savePresetFile(autosavePath(), state, true);
 }
 
 QString PresetManager::cleanFilePath(const QString& rawPath, bool addExtension)
@@ -376,9 +352,11 @@ QString PresetManager::cleanFilePath(const QString& rawPath, bool addExtension)
         path = path.mid(7);
     }
     
-    // Add .s2l extension if needed
-    if (addExtension && !path.toLower().endsWith(".s2l")) {
-        path += ".s2l";
+    // Add extension if needed
+    if (addExtension) {
+        if (!path.toLower().endsWith(".s2o") && !path.toLower().endsWith(".s2l")) {
+            path += ".s2o";
+        }
     }
     
     return path;

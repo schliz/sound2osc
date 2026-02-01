@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +26,7 @@
 
 #include <QSettings>
 #include <QtMath>
+#include <QJsonObject>
 
 TriggerGenerator::TriggerGenerator(QString name, OSCNetworkManager* osc, bool isBandpass, bool invert, int midFreq)
     : TriggerGeneratorInterface(isBandpass)
@@ -47,7 +50,7 @@ void TriggerGenerator::toggleMute()
 {
     m_mute = !m_mute;
     m_filter.setMute(m_mute);
-    m_osc->sendMessage("/s2l/out/" + m_name + "/mute", (m_mute ? "1" : "0"), true);
+    m_osc->sendMessage("/sound2osc/out/" + m_name + "/mute", (m_mute ? "1" : "0"), true);
 }
 
 // toggles mute on and off
@@ -55,10 +58,10 @@ void TriggerGenerator::setMute(bool mute)
 {
     m_mute = mute;
     m_filter.setMute(m_mute);
-    m_osc->sendMessage("/s2l/out/" + m_name + "/mute", (m_mute ? "1" : "0"), true);
+    m_osc->sendMessage("/sound2osc/out/" + m_name + "/mute", (m_mute ? "1" : "0"), true);
 }
 
-bool TriggerGenerator::checkForTrigger(ScaledSpectrum &spectrum, bool forceRelease)
+bool TriggerGenerator::checkForTrigger(const ScaledSpectrum &spectrum, bool forceRelease)
 {
 	qreal value;
 	if (m_isBandpass) {
@@ -97,10 +100,10 @@ bool TriggerGenerator::checkForTrigger(ScaledSpectrum &spectrum, bool forceRelea
 
 void TriggerGenerator::save(QSettings& settings) const
 {
-    settings.setValue(m_name + "/mute", m_mute);
-    settings.setValue(m_name + "/threshold", m_threshold);
-	settings.setValue(m_name + "/midFreq", m_midFreq);
-	settings.setValue(m_name + "/width", m_width);
+    settings.setValue(m_name + "/mute", m_mute.load());
+    settings.setValue(m_name + "/threshold", m_threshold.load());
+	settings.setValue(m_name + "/midFreq", m_midFreq.load());
+	settings.setValue(m_name + "/width", m_width.load());
 	m_filter.save(m_name, settings);
 	m_oscParameters.save(m_name, settings);
 }
@@ -113,6 +116,34 @@ void TriggerGenerator::restore(QSettings& settings)
 	setWidth(settings.value(m_name + "/width").toReal());
 	m_filter.restore(m_name, settings);
     m_oscParameters.restore(m_name, settings);
+}
+
+QJsonObject TriggerGenerator::toState() const
+{
+    QJsonObject state;
+    state["mute"] = m_mute.load();
+    state["threshold"] = m_threshold.load();
+    state["midFreq"] = m_midFreq.load();
+    state["width"] = m_width.load();
+    state["filter"] = m_filter.toState();
+    state["osc"] = m_oscParameters.toState();
+    return state;
+}
+
+void TriggerGenerator::fromState(const QJsonObject& state)
+{
+    m_mute = state["mute"].toBool(false);
+    setThreshold(state["threshold"].toDouble(0.5));
+    setMidFreq(state["midFreq"].toInt(1000));
+    setWidth(state["width"].toDouble(0.1));
+    
+    if (state.contains("filter")) {
+        m_filter.fromState(state["filter"].toObject());
+    }
+    
+    if (state.contains("osc")) {
+        m_oscParameters.fromState(state["osc"].toObject());
+    }
 }
 
 void TriggerGenerator::resetParameters()

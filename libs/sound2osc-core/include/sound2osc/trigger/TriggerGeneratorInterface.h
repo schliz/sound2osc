@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +27,7 @@
 #include <sound2osc/trigger/TriggerFilter.h>
 
 #include <QObject>
+#include <QJsonObject>
 
 
 // Forward declaration to reduce dependencies:
@@ -42,7 +45,7 @@ public:
 
 	// checks if a signal should be triggered by analyzing the given spectrum
     // forceRelease is true when low solo mode is active and a lower trigger was activated
-    virtual bool checkForTrigger(ScaledSpectrum& spectrum, bool forceRelease) = 0;
+    virtual bool checkForTrigger(const ScaledSpectrum& spectrum, bool forceRelease) = 0;
 
 	// returns a reference to the internal TriggerFilter
 	virtual TriggerFilter& getTriggerFilter() = 0;
@@ -52,6 +55,10 @@ public:
 
 	// restores parameters from QSettings
 	virtual void restore(QSettings& settings) = 0;
+
+    // Modern JSON serialization
+    virtual QJsonObject toState() const = 0;
+    virtual void fromState(const QJsonObject& state) = 0;
 
     // returns if this is a Bandpass trigger generator
     bool isBandpass() const { return m_isBandpass; }

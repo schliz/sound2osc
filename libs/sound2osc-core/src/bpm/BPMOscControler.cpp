@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,6 +21,7 @@
 // THE SOFTWARE.
 
 #include <sound2osc/bpm/BPMOscControler.h>
+#include <QJsonArray>
 
 BPMOscControler::BPMOscControler(OSCNetworkManager &osc) :
     m_bpmMute(false)
@@ -31,13 +34,13 @@ void BPMOscControler::setBPMMute(bool mute)
 {
     m_bpmMute = mute;
 
-    m_osc.sendMessage("/s2l/out/bpm/mute", (m_bpmMute ? "1" : "0"), true);
+    m_osc.sendMessage("/sound2osc/out/bpm/mute", (m_bpmMute ? "1" : "0"), true);
 }
 
 void BPMOscControler::toggleBPMMute()
 {
     m_bpmMute = !m_bpmMute;
-    m_osc.sendMessage("/s2l/out/bpm/mute", (m_bpmMute ? "1" : "0"), true);
+    m_osc.sendMessage("/sound2osc/out/bpm/mute", (m_bpmMute ? "1" : "0"), true);
 }
 
 // Restore the commands from e.g. a preset or whatever else
@@ -60,6 +63,30 @@ void BPMOscControler::save(QSettings& settings) {
     // Store each command under the key "bpm/osc/*index*"
     for (int index = 0; index < m_oscCommands.size(); ++index) {
         settings.setValue("bpm/osc/" + QString::number(index), m_oscCommands[index]);
+    }
+}
+
+QJsonObject BPMOscControler::toState() const
+{
+    QJsonObject state;
+    QJsonArray commands;
+    for (const QString& cmd : m_oscCommands) {
+        commands.append(cmd);
+    }
+    state["commands"] = commands;
+    // Mute state is typically not saved in the preset but runtime, 
+    // but the original code didn't save it. Let's stick to commands for now.
+    return state;
+}
+
+void BPMOscControler::fromState(const QJsonObject& state)
+{
+    m_oscCommands.clear();
+    if (state.contains("commands")) {
+        QJsonArray commands = state["commands"].toArray();
+        for (const auto& cmd : commands) {
+            m_oscCommands.append(cmd.toString());
+        }
     }
 }
 
@@ -96,5 +123,5 @@ void BPMOscControler::transmitBPM(float bpm)
     }
 
     // Send information command
-    m_osc.sendMessage("/s2l/out/bpm=" + QString::number(qRound(bpm)), true);
+    m_osc.sendMessage("/sound2osc/out/bpm=" + QString::number(qRound(bpm)), true);
 }

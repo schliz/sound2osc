@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +26,6 @@
 #include <sound2osc/core/QCircularBuffer.h>
 
 #include <QTime>
-#include <QColor>
 
 #include <list>
 
@@ -232,7 +233,6 @@ BPMDetector::BPMDetector(const MonoAudioBuffer &buffer, BPMOscControler *osc) :
   , m_bpm(0)
   , m_framesSinceLastBPMDetection(0)
   , m_minBPM(75)
-  , m_fft()
   , m_window(NUM_BPM_FFT_SAMPLES)
   , m_onsetBuffer(FRAMES_TO_CACHE)
   , m_spectralFluxBuffer(FRAMES_TO_CACHE)
@@ -247,13 +247,12 @@ BPMDetector::BPMDetector(const MonoAudioBuffer &buffer, BPMOscControler *osc) :
   , m_transmitBpm(false)
   , m_oscController(osc)
 {
-    m_fft = static_cast<BasicFFTInterface*>(new FFTRealWrapper<NUM_BPM_FFT_SAMPLES_EXPONENT>());
+    m_fft = std::make_unique<FFTRealWrapper<NUM_BPM_FFT_SAMPLES_EXPONENT>>();
     calculateWindow();
 }
 
 BPMDetector::~BPMDetector()
 {
-    delete m_fft;
 }
 
 void BPMDetector::resetCache()
@@ -398,13 +397,13 @@ void BPMDetector::updateSpectralFluxes(const int fromIndex)
     }
 
     if (max > 0 && !m_waveColors.isEmpty()) {
-        col[0] = col[0] * 128 / max + m_waveColors.last().red() / 2;
-        col[1] = col[1] * 128 / max + m_waveColors.last().green() / 2;
-        col[2] = col[2] * 128 / max + m_waveColors.last().blue() / 2;
+        col[0] = col[0] * 128 / max + m_waveColors.last().r / 2;
+        col[1] = col[1] * 128 / max + m_waveColors.last().g / 2;
+        col[2] = col[2] * 128 / max + m_waveColors.last().b / 2;
     }
 
     // Store the value
-    m_waveColors.push_back(QColor(col[0],col[1],col[2]));
+    m_waveColors.push_back({col[0],col[1],col[2]});
 }
 
 // finds onsets in the audio material

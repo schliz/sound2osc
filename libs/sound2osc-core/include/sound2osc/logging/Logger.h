@@ -1,4 +1,6 @@
-// Copyright (c) 2016-2026 Electronic Theatre Controls, Inc.
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 // SPDX-License-Identifier: MIT
 //
 // Cross-platform structured logging system for sound2osc
@@ -8,14 +10,13 @@
 
 #include <QString>
 #include <QMutex>
-#include <QFile>
-#include <QTextStream>
 #include <QDateTime>
-#include <QDir>
 #include <QStandardPaths>
 
 #include <functional>
 #include <memory>
+#include <filesystem>
+#include <fstream>
 
 namespace sound2osc {
 
@@ -244,8 +245,7 @@ private:
     QString m_format = "[%timestamp%] [%level%] %message%";
     QString m_appName = "sound2osc";
     
-    std::unique_ptr<QFile> m_logFile;
-    std::unique_ptr<QTextStream> m_logStream;
+    std::ofstream m_logFileStream;
     
     QVector<LogHandler> m_handlers;
     bool m_initialized = false;

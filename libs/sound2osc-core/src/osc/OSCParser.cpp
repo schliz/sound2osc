@@ -1,4 +1,6 @@
-// Copyright (c) 2015 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2015 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -58,8 +60,6 @@ class OSCCompileTimeChecks
 
 OSCStream::OSCStream(EnumFrameMode frameMode)
 	: m_FrameMode(frameMode)
-	, m_Buf(0)
-	, m_Capacity(0)
 	, m_Size(0)
 {
 }
@@ -68,20 +68,14 @@ OSCStream::OSCStream(EnumFrameMode frameMode)
 
 OSCStream::~OSCStream()
 {
-	Clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void OSCStream::Clear()
 {
-	if( m_Buf )
-	{
-		delete[] m_Buf;
-		m_Buf = 0;
-	}
-
-	m_Capacity = m_Size = 0;
+	m_Buf.clear();
+	m_Size = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,42 +91,14 @@ bool OSCStream::Add(const char *buf, size_t size)
 {
 	if(buf && size!=0)
 	{
-		const size_t GROW_MULTIPLIER = 3;
-
-		if( m_Buf )
+		if(m_Buf.size() + size > MAX_BUF_SIZE)
 		{
-			size_t avail = (m_Capacity - m_Size);
-			if(avail < size)
-			{
-				m_Capacity = ((m_Capacity + size - avail) * GROW_MULTIPLIER);
-				if(m_Capacity > MAX_BUF_SIZE)
-				{
-					Clear();
-					return false;
-				}
-
-				char *temp = m_Buf;
-				m_Buf = new char[m_Capacity];
-				if(m_Size != 0)
-					memcpy(m_Buf, temp, m_Size);
-				delete[] temp;
-			}
-		}
-		else
-		{
-			m_Capacity = (size * GROW_MULTIPLIER);
-			if(m_Capacity > MAX_BUF_SIZE)
-			{
-				Clear();
-				return false;
-			}
-
-			m_Buf = new char[m_Capacity];
-			m_Size = 0;
+			Clear();
+			return false;
 		}
 
-		memcpy(&m_Buf[m_Size], buf, size);
-		m_Size += size;
+		m_Buf.insert(m_Buf.end(), buf, buf + size);
+		m_Size = m_Buf.size();
 	}
 
 	return true;
@@ -157,9 +123,9 @@ char* OSCStream::GetNextFrame(size_t &size)
 char* OSCStream::GetNextFrame_Mode_1_0(size_t &size)
 {
 	int32_t packetSizeHeader = 0;
-	if(m_Buf && m_Size>=sizeof(packetSizeHeader))
+	if(!m_Buf.empty() && m_Size>=sizeof(packetSizeHeader))
 	{
-		memcpy(&packetSizeHeader, m_Buf, sizeof(packetSizeHeader));
+		memcpy(&packetSizeHeader, m_Buf.data(), sizeof(packetSizeHeader));
 		OSCArgument::Swap32(&packetSizeHeader);
 		if(packetSizeHeader > 0)
 		{
@@ -186,7 +152,7 @@ char* OSCStream::GetNextFrame_Mode_1_0(size_t &size)
 
 char* OSCStream::GetNextFrame_Mode_1_1(size_t &size)
 {
-	if(m_Buf && m_Size!=0)
+	if(!m_Buf.empty() && m_Size!=0)
 	{
 		size_t frameStart = m_Size;
 		for(size_t i=0; i<m_Size; i++)
@@ -241,15 +207,18 @@ char* OSCStream::GetNextFrame_Mode_1_1(size_t &size)
 
 void OSCStream::Chop(size_t size)
 {
-	if(m_Buf && size!=0)
+	if(!m_Buf.empty() && size!=0)
 	{
 		if(m_Size > size)
 		{
-			m_Size -= size;
-			memmove(m_Buf, &m_Buf[size], m_Size);
+			m_Buf.erase(m_Buf.begin(), m_Buf.begin() + size);
+			m_Size = m_Buf.size();
 		}
 		else
+		{
+			m_Buf.clear();
 			m_Size = 0;
+		}
 	}
 }
 

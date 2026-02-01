@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,11 +32,17 @@
 #include <QtMath>
 #include <QVector>
 #include <list>
-#include <QColor>
+#include <memory>
 
 // Rate to calculate the BPM (significantly lower than the sampling period,
 // but still only quater the buffer length, so this should be fine)
 static const int BPM_UPDATE_RATE = 20; // Hz
+
+struct SpectrumColor {
+    int r;
+    int g;
+    int b;
+};
 
 // A class to modell a cluster of Inter Offset Intervalls (IOIs).
 class BeatString;
@@ -64,7 +72,7 @@ public:
     // Helper functions to display a nice GUI
     const QVector<bool>& getOnsets() { return m_onsetBuffer; }
     const Qt3DCore::QCircularBuffer<float>& getWaveDisplay() { return m_spectralFluxBuffer; }
-    const Qt3DCore::QCircularBuffer<QColor>& getWaveColors() { return m_waveColors; }
+    const Qt3DCore::QCircularBuffer<SpectrumColor>& getWaveColors() { return m_waveColors; }
 
 protected:
     // calculates a Hann Window for FFT and saves it to m_window
@@ -91,12 +99,12 @@ protected:
     float                               m_bpm; // the detected bpm
     int                                 m_framesSinceLastBPMDetection; // time since the bpm has last changed in frames
     int                                 m_minBPM; // the minimum bpm that sets the range of possible bpms as min to 2*min. That solves the 60 vs 120 BPM debate
-    BasicFFTInterface*                  m_fft; // FFT implementation
+    std::unique_ptr<BasicFFTInterface>  m_fft; // FFT implementation
     QVector<float>                      m_window; // array with window data
     QVector<bool>                       m_onsetBuffer; // a boolen buffer indicating wether there was a onset i frames ago
     Qt3DCore::QCircularBuffer<float>    m_spectralFluxBuffer; // a float buffer caching the spectral flux of the bands of the last frames
     QVector<float>                      m_spectralFluxNormalized; // a vector to copy the normalized spectral flux data into
-    Qt3DCore::QCircularBuffer<QColor>   m_waveColors; // the color for each sample to give spectral information in the GUI
+    Qt3DCore::QCircularBuffer<SpectrumColor>   m_waveColors; // the color for each sample to give spectral information in the GUI
     QVector<float>                      m_buffer;  // buffer for prepared data (intermediate result)
     QVector<float>                      m_fftOutput; // buffer for FFT Data
     QVector<float>                      m_currentSpectrum; // the spectrum currently being calculated

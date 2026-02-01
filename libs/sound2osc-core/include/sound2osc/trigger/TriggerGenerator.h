@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -18,8 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#ifndef BANDPASSTRIGGERGENERATOR_H
-#define BANDPASSTRIGGERGENERATOR_H
+#ifndef TRIGGERGENERATOR_H
+#define TRIGGERGENERATOR_H
 
 #include <sound2osc/trigger/TriggerGeneratorInterface.h>
 #include <sound2osc/dsp/ScaledSpectrum.h>
@@ -29,6 +31,9 @@
 #include <QObject>
 #include <QSettings>
 #include <QDebug>
+#include <QJsonObject>
+
+#include <atomic>
 
 
 // Forward declaration to reduce dependencies:
@@ -93,7 +98,7 @@ public:
 	qreal getCurrentLevel() const { return m_lastValue; }
 
 	// checks if the max level within the frequency band is greater than the threshold
-    bool checkForTrigger(ScaledSpectrum& spectrum, bool forceRelease) override;
+    bool checkForTrigger(const ScaledSpectrum& spectrum, bool forceRelease) override;
 
 	// ---------------- Save and Restore ---------------
 
@@ -103,6 +108,10 @@ public:
 	// restores parameters from QSettings
 	void restore(QSettings& settings) override;
 
+    // Modern JSON serialization
+    QJsonObject toState() const override;
+    void fromState(const QJsonObject& state) override;
+
 	// resets all parameters to default values
 	void resetParameters();
 
@@ -110,11 +119,11 @@ protected:
     const QString	m_name;  // name of the Trigger (used for save, restore and UI)
     OSCNetworkManager*	m_osc;  // pointer to OSCNetworkManager instance (i.e. of MainController)
 	const bool		m_invert;  // true if signal values should be inverted (i.e. for "silence" trigger)
-    bool            m_mute; // true if the band is muted, which will supress OSC Output
-	int				m_midFreq;  // middle frequency of bandpass in Hz
+    std::atomic<bool> m_mute; // true if the band is muted, which will supress OSC Output
+	std::atomic<int> m_midFreq;  // middle frequency of bandpass in Hz
 	const int		m_defaultMidFreq;  // default midFreq in Hz, used for reset
-	qreal			m_width;  // width of bandpass [0...1]
-	qreal			m_threshold;  // threshold for Trigger generation [0...1]
+	std::atomic<qreal> m_width;  // width of bandpass [0...1]
+	std::atomic<qreal> m_threshold;  // threshold for Trigger generation [0...1]
 	bool			m_isActive;  // true if value is above threshold
 	qreal			m_lastValue;  // last value (used to check if new level message should be sent)
 	TriggerOscParameters m_oscParameters;  // OSC parameter object (stores OSC messages)
@@ -122,4 +131,4 @@ protected:
 
 };
 
-#endif // BANDPASSTRIGGERGENERATOR_H
+#endif // TRIGGERGENERATOR_H

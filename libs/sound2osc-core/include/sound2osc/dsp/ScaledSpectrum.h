@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -88,7 +90,7 @@ public:
 
 	// Scales the incoming linear spectrum to a logarithmic spectrum.
 	// Results will be written in dbSpectrum and normSpectrum.
-	void updateWithLinearSpectrum(const QVector<float> linearSpectrum);
+	void updateWithLinearSpectrum(const QVector<float>& linearSpectrum);
 
 	// returns a normalized spectrum (energy value from 0 to 1)
 	// This spectrum is scaled by both factor and exponent.

@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -126,6 +128,28 @@ void QAudioInputWrapper::setInputByName(const QString &inputName)
     }
 }
 
+void QAudioInputWrapper::start()
+{
+    if (m_audioSource) {
+        if (m_audioSource->state() == QAudio::StoppedState) {
+             m_audioIODevice = m_audioSource->start();
+             if (m_audioIODevice) {
+                connect(m_audioIODevice, &QIODevice::readyRead, this, &QAudioInputWrapper::audioDataReady);
+             }
+        }
+    } else {
+        // Try starting default
+        setInputByName(getDefaultInputName());
+    }
+}
+
+void QAudioInputWrapper::stop()
+{
+    if (m_audioSource) {
+        m_audioSource->stop();
+    }
+}
+
 qreal QAudioInputWrapper::getVolume() const
 {
     if (!m_audioSource) return 0.0;
@@ -197,4 +221,8 @@ void QAudioInputWrapper::audioDataReady()
 
     // Call MonoAudioBuffer as next element in processing chain:
     m_buffer->putSamples(realData, m_actualAudioFormat.channelCount());
+
+    if (m_callback) {
+        m_callback(realData.size());
+    }
 }

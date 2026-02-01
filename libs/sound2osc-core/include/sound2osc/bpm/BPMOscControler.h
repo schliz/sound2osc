@@ -1,4 +1,6 @@
-// Copyright (c) 2016 Electronic Theatre Controls, Inc., http://www.etcconnect.com
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2016 Electronic Theatre Controls, Inc.
+// Copyright (c) 2026-present Christian Schliz <code+sound2osc@foxat.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +25,7 @@
 
 #include <sound2osc/osc/OSCNetworkManager.h>
 #include <QSettings>
+#include <QJsonObject>
 
 class BPMOscControler
 {
@@ -42,6 +45,10 @@ public:
 
     // Save the commands for e.g. a preset
     void save(QSettings& settings);
+
+    // Modern JSON serialization
+    QJsonObject toState() const;
+    void fromState(const QJsonObject& state);
 
     // --------------------------------------- GUI Functions -----------------------------------------------
     // Returns the commands
