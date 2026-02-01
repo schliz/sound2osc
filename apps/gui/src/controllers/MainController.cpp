@@ -258,11 +258,12 @@ QList<bool> MainController::getWaveOnsets()
 
 QList<QString> MainController::getWaveColors()
 {
-    // convert const QVector<QColoer>& to QList<QString> to be used in GUI:
+    // convert const Qt3DCore::QCircularBuffer<SpectrumColor>& to QList<QString> to be used in GUI:
     QList<QString> points;
-    const Qt3DCore::QCircularBuffer<QColor>& colors = m_engine->bpm()->getWaveColors();
+    const auto& colors = m_engine->bpm()->getWaveColors();
     for (int i = 0; i < colors.size(); ++i) {
-        points.append(colors.at(i).name());
+        const auto& c = colors.at(i);
+        points.append(QColor(c.r, c.g, c.b).name());
     }
     return points;
 }
