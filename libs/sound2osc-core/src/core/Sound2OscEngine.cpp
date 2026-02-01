@@ -181,6 +181,16 @@ void Sound2OscEngine::setLowSoloMode(bool enabled)
     m_lowSoloMode = enabled;
 }
 
+void Sound2OscEngine::setAudioInput(std::unique_ptr<AudioInputInterface> input)
+{
+    m_audioInput = std::move(input);
+    if (m_audioInput) {
+        m_audioInput->setCallback([this](int count) {
+            onAudioProcessed(count);
+        });
+    }
+}
+
 QJsonObject Sound2OscEngine::toState() const
 {
     QJsonObject state;
