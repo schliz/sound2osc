@@ -3,6 +3,38 @@
 #include <QNetworkDatagram>
 #include "sound2osc/core/Sound2OscEngine.h"
 #include "sound2osc/logging/Logger.h"
+#include "sound2osc/audio/AudioInputInterface.h"
+
+// Mock Audio Input to deterministically drive the engine
+class MockAudioInput : public AudioInputInterface
+{
+public:
+    explicit MockAudioInput(MonoAudioBuffer* buffer) : AudioInputInterface(buffer) {}
+    
+    void start() override { m_running = true; }
+    void stop() override { m_running = false; }
+    
+    void setCallback(Callback callback) override { m_callback = callback; }
+    QStringList getAvailableInputs() const override { return QStringList("MockInput"); }
+    QString getActiveInputName() const override { return "MockInput"; }
+    void setInputByName(const QString&) override {} // No-op
+    qreal getVolume() const override { return 1.0; }
+    void setVolume(const qreal&) override {}
+    QString getDefaultInputName() const override { return "MockInput"; }
+
+    // Helper to push data and trigger processing
+    void pushData(QVector<qreal>& data) {
+        if (!m_running) return;
+        m_buffer->putSamples(data, 1);
+        if (m_callback) {
+            m_callback(static_cast<int>(data.size()));
+        }
+    }
+
+private:
+    Callback m_callback;
+    bool m_running{false};
+};
 
 class TestPipeline : public QObject
 {
@@ -26,16 +58,20 @@ private slots:
         settings->setUseTcp(false);
         
         sound2osc::Sound2OscEngine engine(settings);
+        
+        // Inject Mock Audio Input
+        auto mockInputPtr = std::make_unique<MockAudioInput>(engine.getAudioBuffer());
+        MockAudioInput* mockInput = mockInputPtr.get();
+        engine.setAudioInput(std::move(mockInputPtr));
+        
         engine.start();
         
         // Ensure Bass Trigger is sensitive
         TriggerGenerator* bass = engine.getBass();
-        bass->setThreshold(0.1);
+        bass->setThreshold(0.001); // Very sensitive
         bass->getOscParameters().setLevelMessage("/bass/level "); // Note space
         
         // 3. Inject Audio (Bass Kick)
-        MonoAudioBuffer* buffer = engine.getAudioBuffer();
-        
         const int chunkSize = 1024;
         const int totalSamples = 44100 * 2; // 2 seconds
         int currentSample = 0;
@@ -51,10 +87,11 @@ private slots:
                 chunk[i] = qSin(2.0f * M_PI * 50.0f * t);
             }
             
-            buffer->putSamples(chunk, 1);
+            // Push data via Mock Input - this triggers the engine loop directly!
+            mockInput->pushData(chunk);
             
-            // Process events to let Engine timers fire
-            QTest::qWait(23); // ~44Hz frame is 23ms
+            // Process events to let Engine timers/slots fire
+            QCoreApplication::processEvents();
             
             // Check Receiver
             while (receiver.hasPendingDatagrams()) {
@@ -77,5 +114,5 @@ private slots:
     }
 };
 
-QTEST_MAIN(TestPipeline)
+QTEST_GUILESS_MAIN(TestPipeline)
 #include "TestPipeline.moc"

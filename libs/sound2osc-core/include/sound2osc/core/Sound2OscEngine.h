@@ -92,6 +92,13 @@ public:
      */
     void fromState(const QJsonObject& state);
 
+    /**
+     * @brief Inject a custom Audio Input backend (e.g. for testing)
+     * Must be called before start().
+     * Takes ownership of the pointer.
+     */
+    void setAudioInput(std::unique_ptr<AudioInputInterface> input);
+
 public slots:
     // Apply settings from SettingsManager to components
     void applySettings();
