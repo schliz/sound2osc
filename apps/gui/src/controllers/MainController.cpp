@@ -442,6 +442,7 @@ void MainController::restoreWindowGeometry()
 
 void MainController::loadPreset(const QString &constFileName, bool createIfNotExistent)
 {
+    Q_UNUSED(createIfNotExistent);
     QJsonObject state = m_presetManager->loadPresetFile(constFileName);
     
     if (state.isEmpty()) {

@@ -15,7 +15,7 @@ public:
         , m_filter(nullptr, m_params, false) 
     {}
 
-    bool checkForTrigger(ScaledSpectrum& spectrum, bool forceRelease) override {
+    bool checkForTrigger(const ScaledSpectrum& spectrum, bool forceRelease) override {
         Q_UNUSED(spectrum);
         Q_UNUSED(forceRelease);
         return false;
